@@ -12,6 +12,7 @@ class Fantasmophone:
     led_colors = [0] * num_sensors
 
     num_audio_channels = 2
+    cur_playing_sounds = set()
 
     def initialize(self):
         print('fantasmophone init')
@@ -28,11 +29,11 @@ class Fantasmophone:
             if self.prev_sensor_values[si] != self.cur_sensor_values:
                 self.sensors_changed = True
                 self.which_sensors_changed.append(si)
-        self.prev_sensor_values = self.cur_sensor_values
+        self.prev_sensor_values = self.cur_sensor_values.copy() # careful with list assignments sans copy
 
     def get_sensor_values(self):  # resets sensor change flag
         ret = {'changed': self.sensors_changed,
-               'which_sensors_changed':self.which_sensors_changed,
+               'which_sensors_changed': self.which_sensors_changed,
                'values': self.cur_sensor_values}
         self.sensors_changed = False
         self.which_sensors_changed = []
@@ -40,7 +41,15 @@ class Fantasmophone:
 
     def play_sound(self, sound_index, channel_index):
         print('play sound %d on chan %d'.format(sound_index, channel_index))
+
+        self.cur_playing_sounds.add(sound_index)
         # serial code to wavtrigger goes here
+
+    def set_led_values(self, intensities, colors):
+        self.led_colors = colors
+        self.led_intensities = intensities
+
+        # serial code to send LED data goes here
 
 
 fan = Fantasmophone()
