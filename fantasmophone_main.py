@@ -21,7 +21,7 @@ class Fantasmophone:
     def update(self):
         print('Fantasmophone update')
 
-        # check serial for new sensor values
+        # todo: check serial for new sensor values
         # self.cur_sensor_values = ...
 
         self.sensors_changed_flag = False
@@ -82,7 +82,7 @@ def loop():
                 fan.play_sound(audio_index, random.randint(fan.num_audio_channels))
                 # todo: cache sound changes together in a list then execute in a batch
 
-    # make some light values
+    # todo: make some light values
     light_magic_values = [1] * fan.num_sensors
 
 
