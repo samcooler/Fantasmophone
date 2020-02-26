@@ -15,11 +15,11 @@ class Fantasmophone:
     cur_playing_sounds = set()
 
     def initialize(self):
-        print('fantasmophone init')
+        print('Fantasmophone init')
         # set up serial connection
 
     def update(self):
-        print('fantasmophone update')
+        print('Fantasmophone update')
 
         # check serial for new sensor values
         # self.cur_sensor_values = ...
@@ -55,6 +55,8 @@ class Fantasmophone:
 fan = Fantasmophone()
 loop_index = 0
 
+def setup():
+    fan.initialize()
 
 def loop():
     print('loop')
@@ -69,13 +71,14 @@ def loop():
         for si in sv['which_sensors_changed']:
             if sv['values'][si]:
                 # directly map sensors to sounds by index
-                fan.play_sound(si, random.randint(fan.num_audio_channels))
+                audio_index = si
+                fan.play_sound(audio_index, random.randint(fan.num_audio_channels))
 
 
 if __name__ == '__main__':
     print('Starting Fantasmophone main')
 
-    fan.initialize()
+    setup()
 
     while True:
         loop()
