@@ -29,7 +29,7 @@ class Fantasmophone:
             if self.prev_sensor_values[si] != self.cur_sensor_values:
                 self.sensors_changed_flag = True
                 self.which_sensors_changed.append(si)
-        self.prev_sensor_values = self.cur_sensor_values.copy() # careful with list assignments sans copy
+        self.prev_sensor_values = self.cur_sensor_values.copy()  # careful with list assignments sans copy
 
     def get_sensor_values(self):  # resets sensor change flag
         # assemble a package of all sensor values
@@ -50,7 +50,7 @@ class Fantasmophone:
         self.led_colors = colors
         self.led_intensities = intensities
 
-        # serial code to send LED data goes here
+        # todo: serial code to send LED data goes here
 
 
 # initialize global variables
