@@ -8,6 +8,11 @@
 // Demonstrates the use of AES encryption, setting the frequency and modem
 // configuration
 
+#ifndef _BV
+#define _BV(bit) (1 << (bit))
+#endif
+
+
 #include <SPI.h>
 #include <RH_RF69.h>
 #include <RHReliableDatagram.h>
@@ -40,8 +45,12 @@ uint8_t numFrames = 1;
 
 void setup()
 {
-  Serial.begin(115200);
+  Serial.begin(115200); // USB serial
+
+  Serial1.begin(57600); // tsunami serial
   //while (!Serial) { delay(1); } // wait until serial console is open, remove if not tethered to computer
+
+  delay(3000);
 
   pinMode(RFM69_RST, OUTPUT);
   digitalWrite(RFM69_RST, LOW);
@@ -69,6 +78,9 @@ void setup()
 
 
   Serial.print("RFM69 radio @");  Serial.print((int)RF69_FREQ);  Serial.println(" MHz");
+
+  Serial.println("begin test 2");
+  trackPlayPoly(2, 1, 1);
 }
 
 
@@ -81,7 +93,7 @@ void loop() {
   char radioPacket[40] = "";
   // alternate sending LED DATA (0) and requesting sensor info (1)
   for (uint8_t requestMode = 0; requestMode < 4; requestMode++) {
-    delay(50);
+    delay(10);
 
     // look for each frame
     for (uint8_t frameIndex = 1; frameIndex <= numFrames; frameIndex++) {
@@ -105,8 +117,12 @@ void loop() {
   
           Serial.print("Got reply from #"); Serial.print(from);
           Serial.print(" : ");
-          Serial.println((char*)buf);
-  
+//          Serial.println((char*)buf);
+          char words[] = "            ";
+          sprintf(words, "%x %x %x %x", buf[0], buf[1], buf[2], buf[3]);
+          Serial.println(words);
+      
+          
         } else {
           Serial.println("No reply, is anyone listening?");
         }
