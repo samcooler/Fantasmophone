@@ -5,7 +5,7 @@ class Fantasmophone:
     num_sensors = 12
     cur_sensor_values = [False] * num_sensors
     prev_sensor_values = [False] * num_sensors
-    sensors_changed = False
+    sensors_changed_flag = False
     which_sensors_changed = []
 
     led_intensities = [0] * num_sensors
@@ -24,18 +24,19 @@ class Fantasmophone:
         # check serial for new sensor values
         # self.cur_sensor_values = ...
 
-        self.sensors_changed = False
+        self.sensors_changed_flag = False
         for si in range(self.num_sensors):
             if self.prev_sensor_values[si] != self.cur_sensor_values:
-                self.sensors_changed = True
+                self.sensors_changed_flag = True
                 self.which_sensors_changed.append(si)
         self.prev_sensor_values = self.cur_sensor_values.copy() # careful with list assignments sans copy
 
     def get_sensor_values(self):  # resets sensor change flag
-        ret = {'changed': self.sensors_changed,
-               'which_sensors_changed': self.which_sensors_changed,
+        # assemble a package of all sensor values
+        ret = {'changed': self.sensors_changed_flag,
+               'which_sensors_changed': self.which_sensors_changed,  # sensor indices [0:num_sensors)
                'values': self.cur_sensor_values}
-        self.sensors_changed = False
+        self.sensors_changed_flag = False
         self.which_sensors_changed = []
         return ret
 
@@ -52,19 +53,25 @@ class Fantasmophone:
         # serial code to send LED data goes here
 
 
+# initialize global variables
 fan = Fantasmophone()
 loop_index = 0
+
 
 def setup():
     fan.initialize()
 
-def loop():
-    print('loop')
-    if loop_index % 100 == 0:
-        print(loop_index)
 
+def loop():
+
+    if loop_index % 100 == 0:
+        print('loop %d'.format(loop_index))
+        # todo: add loop rate /s display
+
+    # get serial updates, assemble fresh reporting data
     fan.update()
 
+    # use some sensors
     sv = fan.get_sensor_values()
     if sv['changed']:
         # sensors changed so do something about it
@@ -73,6 +80,12 @@ def loop():
                 # directly map sensors to sounds by index
                 audio_index = si
                 fan.play_sound(audio_index, random.randint(fan.num_audio_channels))
+                # todo: cache sound changes together in a list then execute in a batch
+
+    # make some light values
+    light_magic_values = [1] * fan.num_sensors
+
+
 
 
 if __name__ == '__main__':
