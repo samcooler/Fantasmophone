@@ -1,8 +1,8 @@
-import random
+import random, serial, time, re
 
 
 class Fantasmophone:
-    num_sensors = 12
+    num_sensors = 24
     cur_sensor_values = [False] * num_sensors
     prev_sensor_values = [False] * num_sensors
     sensors_changed_flag = False
@@ -14,21 +14,46 @@ class Fantasmophone:
     num_audio_channels = 2
     cur_playing_sounds = set()
 
+    serial = None
+
     def initialize(self):
         print('Fantasmophone init')
         # set up serial connection
 
-    def update(self):
-        print('Fantasmophone update')
+        self.serial = serial.Serial('/dev/cu.usbmodem1413401', 57600, timeout=0.5)
+        print('set up serial at {}'.format(self.serial.name))
 
-        # todo: check serial for new sensor values
-        # self.cur_sensor_values = ...
+    def update(self):
+        # print('Fantasmophone update')
+
+        while self.serial.inWaiting() > 0:
+            line = self.serial.readline()
+            line = line.decode('utf-8')
+            # print('got serial in: {}'.format(line.rstrip()))
+            m = re.match('S(.+)-(.+)-(.+)-(.+)\r', line)
+            if m:
+                self.cur_sensor_values = []
+                for i in range(4):
+                    s = m.group(i+1)
+                    s = int(s, 16)
+                    if i % 2 == 0:
+                        n = 8
+                    else:
+                        n = 4
+                    for si in range(n):
+                        mask = 1 << si
+                        self.cur_sensor_values.append(s & mask != 0)
+
+                # print(''.join(['X' if k else '_' for k in self.cur_sensor_values]))
+
+        self.serial.flushInput()
 
         self.sensors_changed_flag = False
         for si in range(self.num_sensors):
-            if self.prev_sensor_values[si] != self.cur_sensor_values:
+            if self.prev_sensor_values[si] != self.cur_sensor_values[si]:
                 self.sensors_changed_flag = True
                 self.which_sensors_changed.append(si)
+
         self.prev_sensor_values = self.cur_sensor_values.copy()  # careful with list assignments sans copy
 
     def get_sensor_values(self):  # resets sensor change flag
@@ -41,9 +66,9 @@ class Fantasmophone:
         return ret
 
     def play_sound(self, sound_index, channel_index):
-        print('play sound %d on chan %d'.format(sound_index, channel_index))
+        print('play sound {} on chan {}'.format(sound_index, channel_index))
 
-        self.cur_playing_sounds.add(sound_index)
+        # self.cur_playing_sounds.add(sound_index)
         # serial code to wavtrigger goes here
 
     def set_led_values(self, intensities, colors):
@@ -53,9 +78,14 @@ class Fantasmophone:
         # todo: serial code to send LED data goes here
 
 
-# initialize global variables
-fan = Fantasmophone()
-loop_index = 0
+class SoundPalette:
+    all_sounds = []
+
+    def __init__(self):
+        self.all_sounds = range(24)  # customize per palette
+
+    def get_sound(self, index):
+        return self.all_sounds[index]
 
 
 def setup():
@@ -64,34 +94,42 @@ def setup():
 
 def loop():
 
-    if loop_index % 100 == 0:
-        print('loop %d'.format(loop_index))
-        # todo: add loop rate /s display
+    # if loop_index % 100 == 0:
+    #     print('loop {}'.format(loop_index))
+    #     # todo: add loop rate /s display
 
     # get serial updates, assemble fresh reporting data
     fan.update()
 
     # use some sensors
     sv = fan.get_sensor_values()
+    # print(sv)
     if sv['changed']:
         # sensors changed so do something about it
         for si in sv['which_sensors_changed']:
-            if sv['values'][si]:
-                # directly map sensors to sounds by index
-                audio_index = si
-                fan.play_sound(audio_index, random.randint(fan.num_audio_channels))
+            if sv['values'][si]:  # play if now True
+                # map sensors to sound index using a palette
+                sound_index = pals[cur_pal].get_sound(si)
+                fan.play_sound(sound_index, random.randint(1, fan.num_audio_channels))
                 # todo: cache sound changes together in a list then execute in a batch
 
     # todo: make some light values
     light_magic_values = [1] * fan.num_sensors
 
 
-
-
 if __name__ == '__main__':
     print('Starting Fantasmophone main')
+
+    fan = Fantasmophone()
+    loop_index = 0
+
+    num_palettes = 2
+    pals = [SoundPalette() for i in range(num_palettes)]
+    cur_pal = random.randint(0, 1)
 
     setup()
 
     while True:
         loop()
+        loop_index += 1
+        time.sleep(1/100)

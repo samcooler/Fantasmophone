@@ -93,18 +93,18 @@ void loop() {
   char radioPacket[40] = "";
   // alternate sending LED DATA (0) and requesting sensor info (1)
   for (uint8_t requestMode = 0; requestMode < 4; requestMode++) {
-    delay(10);
+    delay(20);
 
     // look for each frame
     for (uint8_t frameIndex = 1; frameIndex <= numFrames; frameIndex++) {
       
       if (requestMode == 0) {
-        sprintf(radioPacket, "LED DATA UPDATE");
+        sprintf(radioPacket, "LED");
       } else {
-        sprintf(radioPacket, "Sensor request");
+        sprintf(radioPacket, "SR");
       }
   
-      Serial.print("Sending to frame "); Serial.print(frameIndex); Serial.print(" "); Serial.println(radioPacket);
+      Serial.print("Send"); Serial.print(frameIndex); Serial.print(" "); Serial.println(radioPacket);
   
       // Send a trigger message to the frame
       if (rf69_manager.sendtoWait((uint8_t *)radioPacket, strlen(radioPacket), frameIndex)) {
@@ -115,19 +115,20 @@ void loop() {
         if (rf69_manager.recvfromAckTimeout(buf, &len, 50, &from)) {
           buf[len] = 0; // zero out remaining string
   
-          Serial.print("Got reply from #"); Serial.print(from);
-          Serial.print(" : ");
+          Serial.print("S");
 //          Serial.println((char*)buf);
           char words[] = "            ";
-          sprintf(words, "%x %x %x %x", buf[0], buf[1], buf[2], buf[3]);
+          sprintf(words, "%x-%x-%x-%x", buf[0], buf[1], buf[2], buf[3]);
           Serial.println(words);
-      
+
+//          Serial.write((char*)buf);
+//          Serial.println();
           
         } else {
-          Serial.println("No reply, is anyone listening?");
+          Serial.println("Frame reply missing");
         }
       } else {
-        Serial.println("Sending failed (no ack)");
+        Serial.println("Ping ack failed");
       }
     }
   }

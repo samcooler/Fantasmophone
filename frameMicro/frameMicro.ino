@@ -272,10 +272,10 @@ void loop() {
       Serial.println((char*)buf);
 
 
-      data[0] = currtouched1;
-      data[1] = currtouched1 >> 4;
-      data[2] = currtouched2;
-      data[3] = currtouched2 >> 4;
+      data[0] = currtouched1 & 0xFF;
+      data[1] = currtouched1 >> 8;
+      data[2] = currtouched2 & 0xFF;
+      data[3] = currtouched2 >> 8;
       Serial.print("sending reply: ");
       char words[] = "            ";
       sprintf(words, "%x %x %x %x", data[0], data[1], data[2], data[3]);
