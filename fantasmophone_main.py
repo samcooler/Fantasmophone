@@ -20,13 +20,14 @@ class Fantasmophone:
         print('Fantasmophone init')
         # set up serial connection
 
-        self.serial = serial.Serial('/dev/cu.usbmodem1413401', 57600, timeout=0.5)
+        self.serial = serial.Serial('/dev/cu.usbmodem1423401', 57600, timeout=0.5)
         print('set up serial at {}'.format(self.serial.name))
 
     def update(self):
         # print('Fantasmophone update')
 
         while self.serial.inWaiting() > 0:
+            # the below code is ugly and I want no blame for it, I am sorry but it works
             line = self.serial.readline()
             line = line.decode('utf-8')
             # print('got serial in: {}'.format(line.rstrip()))
@@ -70,6 +71,7 @@ class Fantasmophone:
 
         # self.cur_playing_sounds.add(sound_index)
         # serial code to wavtrigger goes here
+        self.serial.write('P{}c{}\r'.format(sound_index, channel_index).encode('utf-8'))
 
     def set_led_values(self, intensities, colors):
         self.led_colors = colors
@@ -110,8 +112,10 @@ def loop():
             if sv['values'][si]:  # play if now True
                 # map sensors to sound index using a palette
                 sound_index = pals[cur_pal].get_sound(si)
-                fan.play_sound(sound_index, random.randint(1, fan.num_audio_channels))
+                fan.play_sound(sound_index, random.randint(0, fan.num_audio_channels - 1))
                 # todo: cache sound changes together in a list then execute in a batch
+
+                # todo: modulate sounds dynamically for fun
 
     # todo: make some light values
     light_magic_values = [1] * fan.num_sensors

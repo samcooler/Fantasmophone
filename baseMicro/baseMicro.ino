@@ -79,7 +79,11 @@ void setup()
 
   Serial.print("RFM69 radio @");  Serial.print((int)RF69_FREQ);  Serial.println(" MHz");
 
-  Serial.println("begin test 2");
+  Serial.println("begin test 222");
+  trackPlayPoly(2, 1, 1);
+  delay(300);
+  trackPlayPoly(2, 1, 1);
+  delay(300);
   trackPlayPoly(2, 1, 1);
 }
 
@@ -87,9 +91,45 @@ void setup()
 // Dont put this on the stack:
 uint8_t buf[RH_RF69_MAX_MESSAGE_LEN];
 uint8_t data[] = "  OK";
+int serial_rx = 0;
+int sound_id = 0;
+int channel_id = 0;
 
 void loop() {
 
+
+  // receive data from the CPU
+  while (Serial.available() > 0) {
+    serial_rx = Serial.read();
+
+
+    // play a sound
+    if(serial_rx == 'P') {
+        
+        sound_id = Serial.parseInt();
+        Serial.read(); // skip separater
+        channel_id = Serial.parseInt();
+        trackPlayPoly(sound_id, channel_id, 1);
+    }
+
+    // change track gain
+    if(serial_rx == 'G') {
+      int sound_id = Serial.parseInt();
+      Serial.read(); // skip separater
+      int gain = Serial.parseInt();
+      trackGain(sound_id, gain);
+    }
+    
+
+
+    // track fade 
+//    if(serial_rx == 'F') {
+  }
+
+
+  
+  // send data on RF to frames
+  // requesting return sensor data
   char radioPacket[40] = "";
   // alternate sending LED DATA (0) and requesting sensor info (1)
   for (uint8_t requestMode = 0; requestMode < 4; requestMode++) {
@@ -104,7 +144,7 @@ void loop() {
         sprintf(radioPacket, "SR");
       }
   
-      Serial.print("Send"); Serial.print(frameIndex); Serial.print(" "); Serial.println(radioPacket);
+//      Serial.print("Send"); Serial.print(frameIndex); Serial.print(" "); Serial.println(radioPacket);
   
       // Send a trigger message to the frame
       if (rf69_manager.sendtoWait((uint8_t *)radioPacket, strlen(radioPacket), frameIndex)) {
