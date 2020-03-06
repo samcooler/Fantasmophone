@@ -23,7 +23,7 @@
 RH_RF69 rf69(RFM69_CS, RFM69_INT);
 RHReliableDatagram rf69_manager(rf69, FRAME_INDEX);
 
-uint8_t data[4] = {0,0,0,0};
+uint8_t data[4] = {0, 0, 0, 0};
 uint8_t buf[RH_RF69_MAX_MESSAGE_LEN];
 
 // LED SETUP
@@ -115,7 +115,8 @@ void setup() {
   Serial.println();
   delay(4000);
 
-  Serial.println("Fantasmophone apm begins");
+  Serial.println("Fantasmophone frame begins ");
+  Serial.println(FRAME_INDEX);
 
   // RF Communication setup
   //  randomSeed(analogRead(0));
@@ -144,6 +145,8 @@ void setup() {
   // ishighpowermodule flag set like this:
   rf69.setTxPower(20, true);  // range from 14-20 for power, 2nd arg must be true for 69HCW
 
+  rf69_manager.setTimeout(1);
+  rf69_manager.setRetries(0);
 
   // Setup touch sensor
   ////   Default address is 0x5A, if tied to 3.3V its 0x5B
@@ -178,151 +181,111 @@ void setup() {
   // 2 = double click only interrupt output, detect single click
   // Adjust threshhold, higher numbers are less sensitive
   //  lis.setClick(2, CLICKTHRESHHOLD);
-
-  //Serial.println("Setup LEDs");
-  //  // Setup display spots
-  //  int centerColor = random(360);
-  //  for (int i = 0; i < numSpots; i++) {
-  //    spots[i].location = float(i) / numSpots;
-  //    spots[i].velocity = 0.0;
-  //    spots[i].acceleration = 0.0;
-  //    //    spots[i].color = (centerColor + colors[i % 4] + (2 * random(2) - 1) * random(20)) % 360;
-  //    spots[i].color = (centerColor + colors[i % 6] + (2 * random(2) - 1) * random(20)) % 360;
-  //    //    spots[i].color = random(360);
-  //  }
+  //
+  //  Serial.println("Setup LEDs");
+  //    // Setup display spots
+  //    int centerColor = random(360);
+  //    for (int i = 0; i < numSpots; i++) {
+  //      spots[i].location = float(i) / numSpots;
+  //      spots[i].velocity = 0.0;
+  //      spots[i].acceleration = 0.0;
+  //      //    spots[i].color = (centerColor + colors[i % 4] + (2 * random(2) - 1) * random(20)) % 360;
+  //      spots[i].color = (centerColor + colors[i % 6] + (2 * random(2) - 1) * random(20)) % 360;
+  //      //    spots[i].color = random(360);
+  //    }
   //
   //
-  //  leds.begin();
-  //  //  for (int i = 0; i < ledsPerStrip * 8; i++) {
-  //  //    leds.setPixelColor(i, makeColor(centerColor, 100, 50));
-  //  //  }
-  //  //  leds.setBrightness(50);
-  //  //  leds.show();
-  //  //  delay(1000);
-  //  for (int i = 0; i < ledsPerStrip * 8; i++) {
-  //    leds.setPixelColor(i, 0, 0, 0);
-  //  }
-  //  leds.show();
+  //    leds.begin();
+  //    //  for (int i = 0; i < ledsPerStrip * 8; i++) {
+  //    //    leds.setPixelColor(i, makeColor(centerColor, 100, 50));
+  //    //  }
+  //    //  leds.setBrightness(50);
+  //    //  leds.show();
+  //    //  delay(1000);
+  //    for (int i = 0; i < ledsPerStrip * 8; i++) {
+  //      leds.setPixelColor(i, 0, 0, 0);
+  //    }
+  //    leds.show();
   Serial.println("done with setup");
 }
 
 void loop() {
 
 
-  char message[5] = "";
-
-  // Get the currently touched pads
-  currtouched1 = cap1.touched();
-
-//  for (uint8_t i = 0; i < 12; i++) {
-//    if ((currtouched1 & _BV(i)) && !(lasttouched1 & _BV(i)) ) {
-//
-//      sprintf(message, "S1%x", i);
-//      Serial.println(message);
-//
-////      touchSensorStates[i] = true;
-//    }
-//
-//    if (!(currtouched1 & _BV(i)) && (lasttouched1 & _BV(i)) ) {
-//      sprintf(message, "S0%x", i);
-//      Serial.println(message);
-//
-////      touchSensorStates[i] = false;
-//    }
-
-
-    currtouched2 = cap2.touched();
-//    if ((currtouched2 & _BV(i)) && !(lasttouched2 & _BV(i)) ) {
-//
-//
-//      sprintf(message, "S1%x", i + 12);
-//      Serial.println(message);
-//
-////      touchSensorStates[i + 12] = true;
-//    }
-//    if (!(currtouched2 & _BV(i)) && (lasttouched2 & _BV(i)) ) {
-//
-//      sprintf(message, "S0%x", i + 12);
-//      Serial.println(message);
-//
-////      touchSensorStates[i + 12] = false;
-//    }
-//
-//  }
-
-
-  // reset our state
-  lasttouched1 = currtouched1;
-  lasttouched2 = currtouched2;
-
-  //  sprintf(data, "%x%x", currtouched1, currtouched2);
-
   // look for a message from the base
   if (rf69_manager.available())
   {
-    Serial.println("Checking for packet");
-    // Wait for a message addressed to us from the client
+    Serial.print("rx?");
+    // Wait for a message addressed to us from the base and CPU
     uint8_t len = sizeof(buf);
     uint8_t from;
+    
     if (rf69_manager.recvfromAck(buf, &len, &from)) {
       buf[len] = 0; // zero out remaining string
-
+      Serial.println();
       Serial.print("From:"); Serial.print(from);
       Serial.print(" : ");
       Serial.println((char*)buf);
+      // todo: handle incoming messages from base
 
+      currtouched1 = cap1.touched();
+      currtouched2 = cap2.touched();
+      //      sprintf(data, "%x%x", currtouched1, currtouched2);
 
       data[0] = currtouched1 & 0xFF;
       data[1] = currtouched1 >> 8;
       data[2] = currtouched2 & 0xFF;
       data[3] = currtouched2 >> 8;
-      Serial.print("sending reply: ");
+      Serial.print("tx:");
       char words[] = "            ";
       sprintf(words, "%x %x %x %x", data[0], data[1], data[2], data[3]);
       Serial.print(words);
-//      Serial.write(data, sizeof(data));
+      //      Serial.write(data, sizeof(data));
       Serial.println();
 
       // Send a reply back to the originator client
-      if (!rf69_manager.sendtoWait(data, sizeof(data), from))
-        Serial.println("Sending failed (no ack)");
+      rf69_manager.sendtoWait(data, sizeof(data), from);
+      // don't even check the result of that since we don't wait for any ack
     }
   }
 
 
 
-  //  //  for (int i = 0; i < ledsPerStrip * 8; i++) {
-  //  //    leds.setPixelColor(i, 0, 0, 0);
-  //  //  }
-  //  for (int i = 0; i < numSpots; i++) {
-  //
-  //    float center = spots[i].location * ledsPerStrip + ledStripOffset + offsetBySpot[i];
-  //    int ledLocation = round(center);
-  //
-  //    int colorOffset = 0;
-  //    float luminance;
-  //
-  //    float luminanceMult = 10.0;
-  //    if (touchSensorStates[i]) {
-  //      luminanceMult = 120.0;
-  //    }
-  //    //    else if (tapThisFrame) {
-  //    //      luminanceMult = 40.0;
-  //    //    }
-  //
-  //    // draw across width of spot
-  //    for (int offset = -1 * spotWidth; offset <= spotWidth; offset++) {
-  //      int led = ledLocation + offset;
-  //      if (led >= 0 && led <= ledsPerStrip) {
-  //
-  //        luminance = luminanceMult * min(1.3 - abs(center - led) / spotWidth, 1.0);
-  //        colorOffset = 0;//10 * (spotWidth - abs(offset));
-  //
-  //        leds.setPixelColor(led, makeColor((spots[i].color + colorOffset) % 360, 100, luminance));
-  //      }
-  //    }
+  //  for (int i = 0; i < ledsPerStrip * 8; i++) {
+  //    leds.setPixelColor(i, 0, 0, 0);
   //  }
-  //  leds.show();
 
+}
+
+void updateLights() {
+  for (int i = 0; i < numSpots; i++) {
+
+    float center = spots[i].location * ledsPerStrip + ledStripOffset + offsetBySpot[i];
+    int ledLocation = round(center);
+
+    int colorOffset = 0;
+    float luminance;
+
+    float luminanceMult = 10.0;
+    if (touchSensorStates[i]) {
+      luminanceMult = 120.0;
+    }
+    //    else if (tapThisFrame) {
+    //      luminanceMult = 40.0;
+    //    }
+
+    // draw across width of spot
+    for (int offset = -1 * spotWidth; offset <= spotWidth; offset++) {
+      int led = ledLocation + offset;
+      if (led >= 0 && led <= ledsPerStrip) {
+
+        luminance = luminanceMult * min(1.3 - abs(center - led) / spotWidth, 1.0);
+        colorOffset = 0;//10 * (spotWidth - abs(offset));
+
+        leds.setPixelColor(led, makeColor((spots[i].color + colorOffset) % 360, 100, luminance));
+      }
+    }
+  }
+  leds.show();
 
 }

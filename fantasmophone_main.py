@@ -20,7 +20,7 @@ class Fantasmophone:
         print('Fantasmophone init')
         # set up serial connection
 
-        self.serial = serial.Serial('/dev/cu.usbmodem1423401', 57600, timeout=0.5)
+        self.serial = serial.Serial('/dev/cu.usbmodem1423201', 57600, timeout=0.5)
         print('set up serial at {}'.format(self.serial.name))
 
     def update(self):
@@ -45,7 +45,7 @@ class Fantasmophone:
                         mask = 1 << si
                         self.cur_sensor_values.append(s & mask != 0)
 
-                # print(''.join(['X' if k else '_' for k in self.cur_sensor_values]))
+                print(''.join(['X' if k else '_' for k in self.cur_sensor_values]))
 
         self.serial.flushInput()
 

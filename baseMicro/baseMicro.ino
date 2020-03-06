@@ -119,7 +119,11 @@ void loop() {
       int gain = Serial.parseInt();
       trackGain(sound_id, gain);
     }
-    
+
+    // get frame info
+    if(serial_rx == 'I') {
+//      trackPlayPoly(frame_id, 1, 1);
+    }    
 
 
     // track fade 
@@ -133,7 +137,7 @@ void loop() {
   char radioPacket[40] = "";
   // alternate sending LED DATA (0) and requesting sensor info (1)
   for (uint8_t requestMode = 0; requestMode < 4; requestMode++) {
-    delay(20);
+    delay(10);
 
     // look for each frame
     for (uint8_t frameIndex = 1; frameIndex <= numFrames; frameIndex++) {
