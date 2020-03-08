@@ -1,4 +1,4 @@
-import random, serial, time, re
+import random, serial, time, re, glob
 
 
 class Fantasmophone:
@@ -12,6 +12,7 @@ class Fantasmophone:
     led_colors = [0] * num_sensors
 
     num_audio_channels = 2
+    audio_channel_offset = 2
     cur_playing_sounds = set()
 
     serial = None
@@ -19,33 +20,55 @@ class Fantasmophone:
     def initialize(self):
         print('Fantasmophone init')
         # set up serial connection
+        # usbmodem1423401
 
-        self.serial = serial.Serial('/dev/cu.usbmodem1423201', 57600, timeout=0.5)
-        print('set up serial at {}'.format(self.serial.name))
+        while True:
+            ports = glob.glob('/dev/tty.usbmodem*')
+            if len(ports) == 0:
+                time.sleep(1)
+                print('no matching ports')
+                continue
+            try:
+                self.serial = serial.Serial(ports[0], 57600, timeout=0.5)
+                print('set up serial at {}'.format(self.serial.name))
+                break
+            except serial.SerialException:
+                print('failed serial setup at {}'.format(self.serial.name))
+                time.sleep(1)
 
     def update(self):
         # print('Fantasmophone update')
 
-        while self.serial.inWaiting() > 0:
-            # the below code is ugly and I want no blame for it, I am sorry but it works
-            line = self.serial.readline()
-            line = line.decode('utf-8')
-            # print('got serial in: {}'.format(line.rstrip()))
-            m = re.match('S(.+)-(.+)-(.+)-(.+)\r', line)
-            if m:
-                self.cur_sensor_values = []
-                for i in range(4):
-                    s = m.group(i+1)
-                    s = int(s, 16)
-                    if i % 2 == 0:
-                        n = 8
-                    else:
-                        n = 4
-                    for si in range(n):
-                        mask = 1 << si
-                        self.cur_sensor_values.append(s & mask != 0)
+        while True:
+            try:
+                serial_waiting = self.serial.inWaiting()
+            except:
+                print('Lost serial connection, trying to reestablish')
+                self.initialize()
+                time.sleep(1.0)
+                break
 
-                print(''.join(['X' if k else '_' for k in self.cur_sensor_values]))
+            if serial_waiting > 0:
+
+                # the below code is ugly and I want no blame for it, I am sorry but it works
+                line = self.serial.readline()
+                line = line.decode('utf-8')
+                # print('got serial in: {}'.format(line.rstrip()))
+                m = re.match('S(.+)-(.+)-(.+)-(.+)\r', line)
+                if m:
+                    self.cur_sensor_values = []
+                    for i in range(4):
+                        s = m.group(i+1)
+                        s = int(s, 16)
+                        if i % 2 == 0:
+                            n = 8
+                        else:
+                            n = 4
+                        for si in range(n):
+                            mask = 1 << si
+                            self.cur_sensor_values.append(s & mask != 0)
+
+                    print(''.join(['X' if k else '_' for k in self.cur_sensor_values]))
 
         self.serial.flushInput()
 
@@ -67,6 +90,8 @@ class Fantasmophone:
         return ret
 
     def play_sound(self, sound_index, channel_index):
+
+        channel_index += self.audio_channel_offset
         print('play sound {} on chan {}'.format(sound_index, channel_index))
 
         # self.cur_playing_sounds.add(sound_index)
@@ -78,6 +103,10 @@ class Fantasmophone:
         self.led_intensities = intensities
 
         # todo: serial code to send LED data goes here
+        led_data = zip(self.led_colors, self.led_intensities)
+        led_data = [item for sublist in led_data for item in sublist]
+        print('LED data: {}'.format(led_data))
+        self.serial.write('L{}'.format(led_data).encode('utf-8'))
 
 
 class SoundPalette:
@@ -119,6 +148,7 @@ def loop():
 
     # todo: make some light values
     light_magic_values = [1] * fan.num_sensors
+    fan.set_led_values(light_magic_values, light_magic_values * 2)
 
 
 if __name__ == '__main__':

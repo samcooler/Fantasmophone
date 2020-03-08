@@ -13,7 +13,7 @@
 
 
 // RF
-#define FRAME_INDEX     1
+#define FRAME_INDEX    2
 #define RF69_FREQ 915.0
 #define RFM69_CS      8 // Feather M0 w/Radio
 #define RFM69_INT     3
@@ -23,8 +23,8 @@
 RH_RF69 rf69(RFM69_CS, RFM69_INT);
 RHReliableDatagram rf69_manager(rf69, FRAME_INDEX);
 
-uint8_t data[4] = {0, 0, 0, 0};
-uint8_t buf[RH_RF69_MAX_MESSAGE_LEN];
+uint8_t buf_tx[4] = {0,0,0,0};
+uint8_t buf_rx[RH_RF69_MAX_MESSAGE_LEN];
 
 // LED SETUP
 const int ledsPerStrip = 60;
@@ -113,7 +113,7 @@ void setup() {
 
   Serial.println();
   Serial.println();
-  delay(4000);
+  delay(2000);
 
   Serial.println("Fantasmophone frame begins ");
   Serial.println(FRAME_INDEX);
@@ -145,7 +145,7 @@ void setup() {
   // ishighpowermodule flag set like this:
   rf69.setTxPower(20, true);  // range from 14-20 for power, 2nd arg must be true for 69HCW
 
-  rf69_manager.setTimeout(1);
+  rf69_manager.setTimeout(100);
   rf69_manager.setRetries(0);
 
   // Setup touch sensor
@@ -206,7 +206,7 @@ void setup() {
   //      leds.setPixelColor(i, 0, 0, 0);
   //    }
   //    leds.show();
-  Serial.println("done with setup");
+  Serial.println("done with setup. Starting rx loop");
 }
 
 void loop() {
@@ -217,34 +217,42 @@ void loop() {
   {
     Serial.print("rx?");
     // Wait for a message addressed to us from the base and CPU
-    uint8_t len = sizeof(buf);
+    uint8_t len = sizeof(buf_rx);
     uint8_t from;
     
-    if (rf69_manager.recvfromAck(buf, &len, &from)) {
-      buf[len] = 0; // zero out remaining string
+    if (rf69_manager.recvfromAck(buf_rx, &len, &from)) {
+      buf_rx[len] = 0; // zero out remaining string
       Serial.println();
       Serial.print("From:"); Serial.print(from);
       Serial.print(" : ");
-      Serial.println((char*)buf);
-      // todo: handle incoming messages from base
+      Serial.println((char*)buf_rx);
+
+      if(from != 0) {
+        return;
+      }
 
       currtouched1 = cap1.touched();
       currtouched2 = cap2.touched();
-      //      sprintf(data, "%x%x", currtouched1, currtouched2);
+      //      sprintf(buf_tx, "%x%x", currtouched1, currtouched2);
 
-      data[0] = currtouched1 & 0xFF;
-      data[1] = currtouched1 >> 8;
-      data[2] = currtouched2 & 0xFF;
-      data[3] = currtouched2 >> 8;
+      buf_tx[0] = currtouched1 & 0xFF;
+      buf_tx[1] = currtouched1 >> 8;
+      buf_tx[2] = currtouched2 & 0xFF;
+      buf_tx[3] = currtouched2 >> 8;
+
+      buf_tx[0] = 55;
+      buf_tx[1] = 56;
+      buf_tx[2] = 57;
+      buf_tx[3] = 58;
       Serial.print("tx:");
       char words[] = "            ";
-      sprintf(words, "%x %x %x %x", data[0], data[1], data[2], data[3]);
+      sprintf(words, "%x %x %x %x", buf_tx[0], buf_tx[1], buf_tx[2], buf_tx[3]);
       Serial.print(words);
-      //      Serial.write(data, sizeof(data));
+//            Serial.write(buf_tx, sizeof(buf_tx));
       Serial.println();
 
-      // Send a reply back to the originator client
-      rf69_manager.sendtoWait(data, sizeof(data), from);
+      // Send a reply back to the base w/ sensor data
+      rf69_manager.sendtoWait(buf_tx, 4, from);
       // don't even check the result of that since we don't wait for any ack
     }
   }

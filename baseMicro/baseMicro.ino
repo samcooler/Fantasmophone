@@ -22,7 +22,7 @@
 #define RF69_FREQ 915.0
 
 // change addresses for each client board, any number :)
-#define MY_ADDRESS    1
+#define MY_ADDRESS    0
 
 
 #if defined(ADAFRUIT_FEATHER_M0) // Feather M0 w/Radio
@@ -41,7 +41,8 @@ RHReliableDatagram rf69_manager(rf69, MY_ADDRESS);
 
 int16_t packetnum = 0;  // packet counter, we increment per xmission
 
-uint8_t numFrames = 1;
+#define numFrames   2
+int sleepingFrames[] = {0, 0, 0, 0, 0, 0};
 
 void setup()
 {
@@ -75,7 +76,8 @@ void setup()
   // If you are using a high power RF69 eg RFM69HW, you *must* set a Tx power with the
   // ishighpowermodule flag set like this:
   rf69.setTxPower(20, true);  // range from 14-20 for power, 2nd arg must be true for 69HCW
-
+  rf69_manager.setTimeout(0);
+  rf69_manager.setRetries(0);
 
   Serial.print("RFM69 radio @");  Serial.print((int)RF69_FREQ);  Serial.println(" MHz");
 
@@ -84,18 +86,21 @@ void setup()
   delay(300);
   trackPlayPoly(2, 1, 1);
   delay(300);
-  trackPlayPoly(2, 1, 1);
+  trackPlayPoly(3, 1, 1);
 }
 
 
 // Dont put this on the stack:
-uint8_t buf[RH_RF69_MAX_MESSAGE_LEN];
-uint8_t data[] = "  OK";
+uint8_t buf_rx[RH_RF69_MAX_MESSAGE_LEN];
+char buf_tx[RH_RF69_MAX_MESSAGE_LEN];
 int serial_rx = 0;
 int sound_id = 0;
 int channel_id = 0;
+int request_mode = 0;
 
 void loop() {
+  delay(500);
+
 
 
   // receive data from the CPU
@@ -104,16 +109,16 @@ void loop() {
 
 
     // play a sound
-    if(serial_rx == 'P') {
-        
-        sound_id = Serial.parseInt();
-        Serial.read(); // skip separater
-        channel_id = Serial.parseInt();
-        trackPlayPoly(sound_id, channel_id, 1);
+    if (serial_rx == 'P') {
+
+      sound_id = Serial.parseInt();
+      Serial.read(); // skip separater
+      channel_id = Serial.parseInt();
+      trackPlayPoly(sound_id, channel_id, 1);
     }
 
     // change track gain
-    if(serial_rx == 'G') {
+    if (serial_rx == 'G') {
       int sound_id = Serial.parseInt();
       Serial.read(); // skip separater
       int gain = Serial.parseInt();
@@ -121,59 +126,70 @@ void loop() {
     }
 
     // get frame info
-    if(serial_rx == 'I') {
-//      trackPlayPoly(frame_id, 1, 1);
-    }    
+    if (serial_rx == 'I') {
+      //      trackPlayPoly(frame_id, 1, 1);
+    }
 
 
-    // track fade 
-//    if(serial_rx == 'F') {
+    // track fade
+    //    if(serial_rx == 'F') {
   }
 
 
-  
+
   // send data on RF to frames
   // requesting return sensor data
-  char radioPacket[40] = "";
-  // alternate sending LED DATA (0) and requesting sensor info (1)
-  for (uint8_t requestMode = 0; requestMode < 4; requestMode++) {
-    delay(10);
 
-    // look for each frame
-    for (uint8_t frameIndex = 1; frameIndex <= numFrames; frameIndex++) {
-      
-      if (requestMode == 0) {
-        sprintf(radioPacket, "LED");
-      } else {
-        sprintf(radioPacket, "SR");
-      }
-  
-//      Serial.print("Send"); Serial.print(frameIndex); Serial.print(" "); Serial.println(radioPacket);
-  
-      // Send a trigger message to the frame
-      if (rf69_manager.sendtoWait((uint8_t *)radioPacket, strlen(radioPacket), frameIndex)) {
-        
-        // Now wait for a reply from the frame
-        uint8_t len = sizeof(buf);
-        uint8_t from;
-        if (rf69_manager.recvfromAckTimeout(buf, &len, 50, &from)) {
-          buf[len] = 0; // zero out remaining string
-  
-          Serial.print("S");
-//          Serial.println((char*)buf);
-          char words[] = "            ";
-          sprintf(words, "%x-%x-%x-%x", buf[0], buf[1], buf[2], buf[3]);
-          Serial.println(words);
+  // look for each frame
+  for (uint8_t frameIndex = 1; frameIndex <= numFrames; frameIndex++) {
+    sleepingFrames[frameIndex] += 1;
 
-//          Serial.write((char*)buf);
-//          Serial.println();
-          
-        } else {
-          Serial.println("Frame reply missing");
-        }
-      } else {
-        Serial.println("Ping ack failed");
-      }
+    if (sleepingFrames[frameIndex] > 300) { // retry a frame every 1000 steps or so
+      sleepingFrames[frameIndex] = 9;
+      Serial.print("retry comms with frame "); Serial.println(frameIndex);
     }
+    if (sleepingFrames[frameIndex] == 10) {
+      Serial.print("dropping frame "); Serial.println(frameIndex);
+      continue;
+    }
+    if (sleepingFrames[frameIndex] > 10) {
+      continue;
+    }
+
+    if (request_mode == 0) {
+      sprintf(buf_tx, "L%s", "101011011001010100101010101");
+    } else {
+      sprintf(buf_tx, "S");
+    }
+
+    //      Serial.print("Send"); Serial.print(frameIndex); Serial.print(" "); Serial.println(radioPacket);
+
+    // Send a trigger message to the frame
+    rf69_manager.sendtoWait((uint8_t *)buf_tx, strlen(buf_tx), frameIndex);
+    //    Serial.print("tx");
+    //    Serial.println(radioPacket);
+
+    // Now wait for a reply from the frame
+    uint8_t len = sizeof(buf_rx);
+    uint8_t from;
+    if (rf69_manager.recvfromAckTimeout(buf_rx, &len, 200, &from)) {
+      buf_rx[len] = 0; // zero out remaining string
+
+      //      Serial.println((char*)buf_rx);
+      char serial_tx[] = "                     ";
+      sprintf(serial_tx, "rx %x S: %x-%x-%x-%x", frameIndex, buf_rx[0], buf_rx[1], buf_rx[2], buf_rx[3]);
+      Serial.println(serial_tx);
+
+      sleepingFrames[frameIndex] = 0;
+
+    } else {
+      Serial.print("Frame reply missing "); Serial.println(frameIndex);
+    }
+
   }
+
+  // alternate sending LED DATA (0) and requesting sensor info (1)
+  request_mode += 1;
+  if (request_mode > 4) request_mode = 0;
+
 }
