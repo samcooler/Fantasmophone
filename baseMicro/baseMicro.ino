@@ -15,7 +15,6 @@
 
 #include <SPI.h>
 #include <RH_RF69.h>
-#include <RHReliableDatagram.h>
 /************ Radio Setup ***************/
 
 // Change to 434.0 or other frequency, must match RX's freq!
@@ -34,12 +33,6 @@
 
 // Singleton instance of the radio driver
 RH_RF69 rf69(RFM69_CS, RFM69_INT);
-
-// Class to manage message delivery and receipt, using the driver declared above
-RHReliableDatagram rf69_manager(rf69, MY_ADDRESS);
-
-
-int16_t packetnum = 0;  // packet counter, we increment per xmission
 
 #define numFrames   2
 int sleepingFrames[] = {0, 0, 0, 0, 0, 0};
@@ -62,7 +55,7 @@ void setup()
   digitalWrite(RFM69_RST, LOW);
   delay(10);
 
-  if (!rf69_manager.init()) {
+  if (!rf69.init()) {
     Serial.println("RFM69 radio init failed");
     while (1);
   }
@@ -76,8 +69,6 @@ void setup()
   // If you are using a high power RF69 eg RFM69HW, you *must* set a Tx power with the
   // ishighpowermodule flag set like this:
   rf69.setTxPower(20, true);  // range from 14-20 for power, 2nd arg must be true for 69HCW
-  rf69_manager.setTimeout(0);
-  rf69_manager.setRetries(0);
 
   Serial.print("RFM69 radio @");  Serial.print((int)RF69_FREQ);  Serial.println(" MHz");
 
@@ -99,7 +90,7 @@ int channel_id = 0;
 int request_mode = 0;
 
 void loop() {
-  delay(500);
+  delay(5);
 
 
 
@@ -144,43 +135,45 @@ void loop() {
   for (uint8_t frameIndex = 1; frameIndex <= numFrames; frameIndex++) {
     sleepingFrames[frameIndex] += 1;
 
-    if (sleepingFrames[frameIndex] > 300) { // retry a frame every 1000 steps or so
-      sleepingFrames[frameIndex] = 9;
+    if (sleepingFrames[frameIndex] > 1000) { // retry a frame every 1000 steps or so
+      sleepingFrames[frameIndex] = 4;
       Serial.print("retry comms with frame "); Serial.println(frameIndex);
     }
-    if (sleepingFrames[frameIndex] == 10) {
+    if (sleepingFrames[frameIndex] == 5) {
       Serial.print("dropping frame "); Serial.println(frameIndex);
       continue;
     }
-    if (sleepingFrames[frameIndex] > 10) {
+    if (sleepingFrames[frameIndex] > 5) {
       continue;
     }
 
     if (request_mode == 0) {
-      sprintf(buf_tx, "L%s", "101011011001010100101010101");
+      sprintf(buf_tx, " L%s", "101011011001010100101010101");
     } else {
-      sprintf(buf_tx, "S");
+      sprintf(buf_tx, " S");
     }
+    buf_tx[0] = frameIndex;
 
     //      Serial.print("Send"); Serial.print(frameIndex); Serial.print(" "); Serial.println(radioPacket);
 
     // Send a trigger message to the frame
-    rf69_manager.sendtoWait((uint8_t *)buf_tx, strlen(buf_tx), frameIndex);
+//    rf69_manager.sendtoWait((uint8_t *)buf_tx, strlen(buf_tx), frameIndex);
+    rf69.send((uint8_t *)buf_tx, strlen(buf_tx));
     //    Serial.print("tx");
     //    Serial.println(radioPacket);
 
     // Now wait for a reply from the frame
     uint8_t len = sizeof(buf_rx);
-    uint8_t from;
-    if (rf69_manager.recvfromAckTimeout(buf_rx, &len, 200, &from)) {
-      buf_rx[len] = 0; // zero out remaining string
 
-      //      Serial.println((char*)buf_rx);
-      char serial_tx[] = "                     ";
-      sprintf(serial_tx, "rx %x S: %x-%x-%x-%x", frameIndex, buf_rx[0], buf_rx[1], buf_rx[2], buf_rx[3]);
-      Serial.println(serial_tx);
-
-      sleepingFrames[frameIndex] = 0;
+    if (rf69.waitAvailableTimeout(20)) {
+      if(rf69.recv(buf_rx, &len)) {
+  
+        char serial_tx[] = "                     ";
+        sprintf(serial_tx, "rx %x S: %x-%x-%x-%x RSSI %d", frameIndex, buf_rx[1], buf_rx[2], buf_rx[3], buf_rx[4], rf69.lastRssi());
+        Serial.println(serial_tx);
+  
+        sleepingFrames[frameIndex] = 0;
+      }
 
     } else {
       Serial.print("Frame reply missing "); Serial.println(frameIndex);

@@ -2,17 +2,29 @@ import random, serial, time, re, glob
 
 
 class Fantasmophone:
-    num_sensors = 24
-    cur_sensor_values = [False] * num_sensors
-    prev_sensor_values = [False] * num_sensors
+
+    num_frames = 2
+    num_sensors_by_frame = (24, 24)
+
+    rssi_by_frame = [0] * num_frames
+    cur_sensor_values = []
+    prev_sensor_values = []
+    for fi in range(num_frames):
+        cur_sensor_values.append([False] * num_sensors_by_frame[fi])
+        prev_sensor_values.append([False] * num_sensors_by_frame[fi])
+
     sensors_changed_flag = False
     which_sensors_changed = []
 
-    led_intensities = [0] * num_sensors
-    led_colors = [0] * num_sensors
+    led_intensities = []
+    led_colors = []
+
+    for fi in range(num_frames):
+        led_intensities.append([0] * num_sensors_by_frame[fi])
+        led_colors.append([0] * num_sensors_by_frame[fi])
 
     num_audio_channels = 2
-    audio_channel_offset = 2
+    audio_channel_offset = 0
     cur_playing_sounds = set()
 
     serial = None
@@ -29,7 +41,7 @@ class Fantasmophone:
                 print('no matching ports')
                 continue
             try:
-                self.serial = serial.Serial(ports[0], 57600, timeout=0.5)
+                self.serial = serial.Serial(ports[0], 115200, timeout=0.5)
                 print('set up serial at {}'.format(self.serial.name))
                 break
             except serial.SerialException:
@@ -39,44 +51,51 @@ class Fantasmophone:
     def update(self):
         # print('Fantasmophone update')
 
-        while True:
-            try:
-                serial_waiting = self.serial.inWaiting()
-            except:
-                print('Lost serial connection, trying to reestablish')
-                self.initialize()
-                time.sleep(1.0)
-                break
+        try:
+            serial_waiting = self.serial.inWaiting()
+        except:
+            print('Lost serial connection, trying to reestablish')
+            self.initialize()
+            time.sleep(1.0)
+            return
 
-            if serial_waiting > 0:
+        if serial_waiting > 0:
 
-                # the below code is ugly and I want no blame for it, I am sorry but it works
-                line = self.serial.readline()
-                line = line.decode('utf-8')
-                # print('got serial in: {}'.format(line.rstrip()))
-                m = re.match('S(.+)-(.+)-(.+)-(.+)\r', line)
-                if m:
-                    self.cur_sensor_values = []
-                    for i in range(4):
-                        s = m.group(i+1)
-                        s = int(s, 16)
-                        if i % 2 == 0:
-                            n = 8
-                        else:
-                            n = 4
-                        for si in range(n):
-                            mask = 1 << si
-                            self.cur_sensor_values.append(s & mask != 0)
+            # the below code is ugly and I want no blame for it, I am sorry but it works
+            line = self.serial.readline()
+            line = line.decode('utf-8')
+            # print('got serial in: {}'.format(line.rstrip()))
+            m = re.match('rx (.) S: (.+)-(.+)-(.+)-(.+) RSSI (.+)\r', line)
+            if m:
+                # print(m.groups())
+                frame_index = int(m.group(1))
+                self.rssi_by_frame[frame_index-1] = int(m.group(6))
 
-                    print(''.join(['X' if k else '_' for k in self.cur_sensor_values]))
+                values = []
+                for i in range(4):
+                    s = m.group(i+2)
+                    s = int(s, 16)
+                    if i % 2 == 0:
+                        n = 8
+                    else:
+                        n = 4
+                    for si in range(n):
+                        mask = 1 << si
+                        values.append(s & mask != 0)
+
+                self.cur_sensor_values[frame_index-1] = values
+
+                # print('frame {}: '.format(frame_index) +
+                #       ''.join(['X' if k else '_' for k in self.cur_sensor_values[frame_index-1]]))
 
         self.serial.flushInput()
 
         self.sensors_changed_flag = False
-        for si in range(self.num_sensors):
-            if self.prev_sensor_values[si] != self.cur_sensor_values[si]:
-                self.sensors_changed_flag = True
-                self.which_sensors_changed.append(si)
+        for fi in range(self.num_frames):
+            for si in range(self.num_sensors_by_frame[fi]):
+                if self.prev_sensor_values[fi][si] != self.cur_sensor_values[fi][si]:
+                    self.sensors_changed_flag = True
+                    self.which_sensors_changed.append((fi, si))
 
         self.prev_sensor_values = self.cur_sensor_values.copy()  # careful with list assignments sans copy
 
@@ -137,18 +156,19 @@ def loop():
     # print(sv)
     if sv['changed']:
         # sensors changed so do something about it
-        for si in sv['which_sensors_changed']:
-            if sv['values'][si]:  # play if now True
+        for sensor_index in sv['which_sensors_changed']:
+
+            if sv['values'][sensor_index[0]][sensor_index[1]]:  # play if now True
                 # map sensors to sound index using a palette
-                sound_index = pals[cur_pal].get_sound(si)
+                sound_index = pals[cur_pal].get_sound(sensor_index[1])
                 fan.play_sound(sound_index, random.randint(0, fan.num_audio_channels - 1))
                 # todo: cache sound changes together in a list then execute in a batch
 
                 # todo: modulate sounds dynamically for fun
 
     # todo: make some light values
-    light_magic_values = [1] * fan.num_sensors
-    fan.set_led_values(light_magic_values, light_magic_values * 2)
+    # light_magic_values = [1] * fan.num_sensors_by_frame
+    # fan.set_led_values(light_magic_values, light_magic_values * 2)
 
 
 if __name__ == '__main__':
@@ -163,7 +183,14 @@ if __name__ == '__main__':
 
     setup()
 
+    t = time.perf_counter()
     while True:
         loop()
         loop_index += 1
+
+        if loop_index % 200 == 0:
+            print('FPS: {:.0f}'.format(200/(time.perf_counter() - t)))
+            print('RSSI: {}'.format(fan.rssi_by_frame))
+            t = time.perf_counter()
         time.sleep(1/100)
+

@@ -5,7 +5,6 @@
 #include <Adafruit_DotStar.h>
 #include <SPI.h>
 #include <RH_RF69.h>
-#include <RHReliableDatagram.h>
 
 #ifndef _BV
 #define _BV(bit) (1 << (bit))
@@ -13,7 +12,7 @@
 
 
 // RF
-#define FRAME_INDEX    2
+#define FRAME_INDEX    1
 #define RF69_FREQ 915.0
 #define RFM69_CS      8 // Feather M0 w/Radio
 #define RFM69_INT     3
@@ -21,9 +20,8 @@
 #define LED           13
 
 RH_RF69 rf69(RFM69_CS, RFM69_INT);
-RHReliableDatagram rf69_manager(rf69, FRAME_INDEX);
 
-uint8_t buf_tx[4] = {0,0,0,0};
+uint8_t buf_tx[5] = {0, 0, 0, 0, 0};
 uint8_t buf_rx[RH_RF69_MAX_MESSAGE_LEN];
 
 // LED SETUP
@@ -130,7 +128,7 @@ void setup() {
   digitalWrite(RFM69_RST, LOW);
   delay(10);
 
-  if (!rf69_manager.init()) {
+  if (!rf69.init()) {
     Serial.println("RFM69 radio init failed");
     while (1);
   }
@@ -144,9 +142,6 @@ void setup() {
   // If you are using a high power RF69 eg RFM69HW, you *must* set a Tx power with the
   // ishighpowermodule flag set like this:
   rf69.setTxPower(20, true);  // range from 14-20 for power, 2nd arg must be true for 69HCW
-
-  rf69_manager.setTimeout(100);
-  rf69_manager.setRetries(0);
 
   // Setup touch sensor
   ////   Default address is 0x5A, if tied to 3.3V its 0x5B
@@ -213,21 +208,20 @@ void loop() {
 
 
   // look for a message from the base
-  if (rf69_manager.available())
+  if (rf69.available())
   {
     Serial.print("rx?");
     // Wait for a message addressed to us from the base and CPU
     uint8_t len = sizeof(buf_rx);
     uint8_t from;
-    
-    if (rf69_manager.recvfromAck(buf_rx, &len, &from)) {
-      buf_rx[len] = 0; // zero out remaining string
+
+    if (rf69.recv(buf_rx, &len)) {
+      if (!len) return;
+      buf_rx[len] = 0;
       Serial.println();
-      Serial.print("From:"); Serial.print(from);
-      Serial.print(" : ");
       Serial.println((char*)buf_rx);
 
-      if(from != 0) {
+      if (buf_rx[0] != FRAME_INDEX) {
         return;
       }
 
@@ -235,25 +229,26 @@ void loop() {
       currtouched2 = cap2.touched();
       //      sprintf(buf_tx, "%x%x", currtouched1, currtouched2);
 
-      buf_tx[0] = currtouched1 & 0xFF;
-      buf_tx[1] = currtouched1 >> 8;
-      buf_tx[2] = currtouched2 & 0xFF;
-      buf_tx[3] = currtouched2 >> 8;
+      buf_tx[0] = 0; // destination base
+      buf_tx[1] = currtouched1 & 0xFF;
+      buf_tx[2] = currtouched1 >> 8;
+      buf_tx[3] = currtouched2 & 0xFF;
+      buf_tx[4] = currtouched2 >> 8;
 
-      buf_tx[0] = 55;
-      buf_tx[1] = 56;
-      buf_tx[2] = 57;
-      buf_tx[3] = 58;
+      //      buf_tx[0] = 55;
+      //      buf_tx[1] = 56;
+      //      buf_tx[2] = 57;
+      //      buf_tx[3] = 58;
       Serial.print("tx:");
       char words[] = "            ";
-      sprintf(words, "%x %x %x %x", buf_tx[0], buf_tx[1], buf_tx[2], buf_tx[3]);
+      sprintf(words, "%x %x %x %x", buf_tx[1], buf_tx[2], buf_tx[3], buf_tx[4]);
       Serial.print(words);
-//            Serial.write(buf_tx, sizeof(buf_tx));
+      //            Serial.write(buf_tx, sizeof(buf_tx));
       Serial.println();
 
       // Send a reply back to the base w/ sensor data
-      rf69_manager.sendtoWait(buf_tx, 4, from);
-      // don't even check the result of that since we don't wait for any ack
+      rf69.send(buf_tx, sizeof(buf_tx));
+      rf69.waitPacketSent();
     }
   }
 
