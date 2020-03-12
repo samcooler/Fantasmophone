@@ -3,8 +3,8 @@ import random, serial, time, re, glob
 
 class Fantasmophone:
 
-    num_frames = 2
-    num_sensors_by_frame = (24, 24)
+    num_frames = 3
+    num_sensors_by_frame = (24, 24, 12)
 
     rssi_by_frame = [0] * num_frames
     cur_sensor_values = []
@@ -85,8 +85,10 @@ class Fantasmophone:
 
                 self.cur_sensor_values[frame_index-1] = values
 
-                # print('frame {}: '.format(frame_index) +
-                #       ''.join(['X' if k else '_' for k in self.cur_sensor_values[frame_index-1]]))
+                # sensor debug printout
+                # todo: switch to a real logging system, make this optional
+                print('frame {}: '.format(frame_index) +
+                      ''.join(['X' if k else '_' for k in self.cur_sensor_values[frame_index-1]]))
 
         self.serial.flushInput()
 

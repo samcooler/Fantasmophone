@@ -111,7 +111,7 @@ void setup() {
 
   Serial.println();
   Serial.println();
-  delay(2000);
+  delay(4000);
 
   Serial.println("Fantasmophone frame begins ");
   Serial.println(FRAME_INDEX);

@@ -34,7 +34,10 @@
 // Singleton instance of the radio driver
 RH_RF69 rf69(RFM69_CS, RFM69_INT);
 
-#define numFrames   2
+#define RX_WAIT_TIMEOUT 20
+#define RF_RETRY_STEP_COUNT  2000
+
+#define numFrames   3
 int sleepingFrames[] = {0, 0, 0, 0, 0, 0};
 
 void setup()
@@ -44,7 +47,7 @@ void setup()
   Serial1.begin(57600); // tsunami serial
   //while (!Serial) { delay(1); } // wait until serial console is open, remove if not tethered to computer
 
-  delay(3000);
+  delay(4000);
 
   pinMode(RFM69_RST, OUTPUT);
   digitalWrite(RFM69_RST, LOW);
@@ -135,7 +138,7 @@ void loop() {
   for (uint8_t frameIndex = 1; frameIndex <= numFrames; frameIndex++) {
     sleepingFrames[frameIndex] += 1;
 
-    if (sleepingFrames[frameIndex] > 1000) { // retry a frame every 1000 steps or so
+    if (sleepingFrames[frameIndex] > RF_RETRY_STEP_COUNT) { // retry a frame every 1000 steps or so
       sleepingFrames[frameIndex] = 4;
       Serial.print("retry comms with frame "); Serial.println(frameIndex);
     }
@@ -165,7 +168,7 @@ void loop() {
     // Now wait for a reply from the frame
     uint8_t len = sizeof(buf_rx);
 
-    if (rf69.waitAvailableTimeout(20)) {
+    if (rf69.waitAvailableTimeout(RX_WAIT_TIMEOUT)) {
       if(rf69.recv(buf_rx, &len)) {
   
         char serial_tx[] = "                     ";
