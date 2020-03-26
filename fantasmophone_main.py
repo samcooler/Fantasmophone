@@ -1,4 +1,5 @@
 import random, serial, time, re, glob
+from playsound import playsound
 
 
 class Fantasmophone:
@@ -87,8 +88,8 @@ class Fantasmophone:
 
                 # sensor debug printout
                 # todo: switch to a real logging system, make this optional
-                print('frame {}: '.format(frame_index) +
-                      ''.join(['X' if k else '_' for k in self.cur_sensor_values[frame_index-1]]))
+                # print('frame {}: '.format(frame_index) +
+                #       ''.join(['X' if k else '_' for k in self.cur_sensor_values[frame_index-1]]))
 
         self.serial.flushInput()
 
@@ -191,8 +192,7 @@ if __name__ == '__main__':
         loop_index += 1
 
         if loop_index % 200 == 0:
-            print('FPS: {:.0f}'.format(200/(time.perf_counter() - t)))
-            print('RSSI: {}'.format(fan.rssi_by_frame))
+            print('FPS: {:.0f} RSSI: {}'.format(200/(time.perf_counter() - t), fan.rssi_by_frame))
             t = time.perf_counter()
         time.sleep(1/100)
 

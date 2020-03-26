@@ -1,12 +1,3 @@
-// rf69 demo tx rx.pde
-// -*- mode: C++ -*-
-// Example sketch showing how to create a simple addressed, reliable messaging client
-// with the RH_RF69 class. RH_RF69 class does not provide for addressing or
-// reliability, so you should only use RH_RF69  if you do not need the higher
-// level messaging abilities.
-// It is designed to work with the other example rf69_server.
-// Demonstrates the use of AES encryption, setting the frequency and modem
-// configuration
 
 #ifndef _BV
 #define _BV(bit) (1 << (bit))
@@ -17,10 +8,8 @@
 #include <RH_RF69.h>
 /************ Radio Setup ***************/
 
-// Change to 434.0 or other frequency, must match RX's freq!
 #define RF69_FREQ 915.0
 
-// change addresses for each client board, any number :)
 #define MY_ADDRESS    0
 
 

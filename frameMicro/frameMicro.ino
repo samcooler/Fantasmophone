@@ -26,7 +26,7 @@ uint8_t buf_rx[RH_RF69_MAX_MESSAGE_LEN];
 
 // LED SETUP
 const int ledsPerStrip = 60;
-const int ledStripOffset = 1;
+const int ledStripOffset = 0;
 
 
 Adafruit_DotStar leds(ledsPerStrip, DOTSTAR_BRG);
@@ -36,10 +36,6 @@ Adafruit_DotStar leds(ledsPerStrip, DOTSTAR_BRG);
 Adafruit_MPR121 cap1 = Adafruit_MPR121();
 Adafruit_MPR121 cap2 = Adafruit_MPR121();
 
-// Keeps track of the last pins touched
-// so we know when buttons are 'released'
-uint16_t lasttouched1 = 0;
-uint16_t lasttouched2 = 0;
 uint16_t currtouched1 = 0;
 uint16_t currtouched2 = 0;
 
@@ -235,10 +231,6 @@ void loop() {
       buf_tx[3] = currtouched2 & 0xFF;
       buf_tx[4] = currtouched2 >> 8;
 
-      //      buf_tx[0] = 55;
-      //      buf_tx[1] = 56;
-      //      buf_tx[2] = 57;
-      //      buf_tx[3] = 58;
       Serial.print("tx:");
       char words[] = "            ";
       sprintf(words, "%x %x %x %x", buf_tx[1], buf_tx[2], buf_tx[3], buf_tx[4]);
@@ -254,10 +246,10 @@ void loop() {
 
 
 
-  //  for (int i = 0; i < ledsPerStrip * 8; i++) {
-  //    leds.setPixelColor(i, 0, 0, 0);
-  //  }
-
+//    for (int i = 0; i < ledsPerStrip * 8; i++) {
+//      leds.setPixelColor(i, 0, 0, 0);
+//    }
+//    leds.show();
 }
 
 void updateLights() {
