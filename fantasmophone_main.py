@@ -1,9 +1,8 @@
-import random, serial, time, re, glob
+import random, serial, time, re, glob, sys, select
 from playsound import playsound
 
 
 class Fantasmophone:
-
     num_frames = 3
     num_sensors_by_frame = (24, 24, 12)
 
@@ -30,13 +29,16 @@ class Fantasmophone:
 
     serial = None
 
+    group1 = []
+
     def initialize(self):
         print('Fantasmophone init')
         # set up serial connection
         # usbmodem1423401
 
         while True:
-            ports = glob.glob('/dev/tty.usbmodem*')
+            # ports = glob.glob('/dev/tty.usbmodem*')
+            ports = glob.glob('/dev/ttyACM*')
             if len(ports) == 0:
                 time.sleep(1)
                 print('no matching ports')
@@ -70,11 +72,11 @@ class Fantasmophone:
             if m:
                 # print(m.groups())
                 frame_index = int(m.group(1))
-                self.rssi_by_frame[frame_index-1] = int(m.group(6))
+                self.rssi_by_frame[frame_index - 1] = int(m.group(6))
 
                 values = []
                 for i in range(4):
-                    s = m.group(i+2)
+                    s = m.group(i + 2)
                     s = int(s, 16)
                     if i % 2 == 0:
                         n = 8
@@ -84,7 +86,7 @@ class Fantasmophone:
                         mask = 1 << si
                         values.append(s & mask != 0)
 
-                self.cur_sensor_values[frame_index-1] = values
+                self.cur_sensor_values[frame_index - 1] = values
 
                 # sensor debug printout
                 # todo: switch to a real logging system, make this optional
@@ -143,10 +145,25 @@ class SoundPalette:
 
 def setup():
     fan.initialize()
+    print('Time to set up!')
+    print('Touch group 1 sensors. When you are done hit enter.')
+    while True:
+        fan.update()
+        sv = fan.get_sensor_values()
+        if sv['changed']:
+            # print(sv)
+            # sensors changed so do something about it
+            for sensor_index in sv['which_sensors_changed']:
+                print(sensor_index[1])
+                fan.group1.append(sensor_index)
+        time.sleep(1 / 100)
+        if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
+            line = input()
+            break
+    print('Group 1 sensors: {}'.format(fan.group1))
 
 
 def loop():
-
     # if loop_index % 100 == 0:
     #     print('loop {}'.format(loop_index))
     #     # todo: add loop rate /s display
@@ -158,6 +175,7 @@ def loop():
     sv = fan.get_sensor_values()
     # print(sv)
     if sv['changed']:
+        print(sv)
         # sensors changed so do something about it
         for sensor_index in sv['which_sensors_changed']:
 
@@ -192,7 +210,6 @@ if __name__ == '__main__':
         loop_index += 1
 
         if loop_index % 200 == 0:
-            print('FPS: {:.0f} RSSI: {}'.format(200/(time.perf_counter() - t), fan.rssi_by_frame))
+            print('FPS: {:.0f} RSSI: {}'.format(200 / (time.perf_counter() - t), fan.rssi_by_frame))
             t = time.perf_counter()
-        time.sleep(1/100)
-
+        time.sleep(1 / 100)
