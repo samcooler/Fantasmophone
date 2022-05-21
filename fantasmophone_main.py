@@ -1,10 +1,10 @@
 import random, serial, time, re, glob, sys, select
-from playsound import playsound
+# from playsound import playsound
 
 
 class Fantasmophone:
     num_frames = 3
-    num_sensors_by_frame = (24, 24, 12)
+    num_sensors_by_frame = (48, 12, 12)
 
     rssi_by_frame = [0] * num_frames
     cur_sensor_values = []
@@ -29,7 +29,7 @@ class Fantasmophone:
 
     serial = None
 
-    group1 = []
+    # group1 = []
 
     def initialize(self):
         print('Fantasmophone init')
@@ -37,14 +37,14 @@ class Fantasmophone:
         # usbmodem1423401
 
         while True:
-            # ports = glob.glob('/dev/tty.usbmodem*')
-            ports = glob.glob('/dev/ttyACM*')
+            ports = glob.glob('/dev/tty.usbmodem142201')
+            # ports = glob.glob('/dev/ttyACM*')
             if len(ports) == 0:
                 time.sleep(1)
                 print('no matching ports')
                 continue
             try:
-                self.serial = serial.Serial(ports[0], 115200, timeout=0.5)
+                self.serial = serial.Serial(ports[0], 1000000, timeout=0.5)
                 print('set up serial at {}'.format(self.serial.name))
                 break
             except serial.SerialException:
@@ -67,15 +67,16 @@ class Fantasmophone:
             # the below code is ugly and I want no blame for it, I am sorry but it works
             line = self.serial.readline()
             line = line.decode('utf-8')
-            # print('got serial in: {}'.format(line.rstrip()))
-            m = re.match('rx (.) S: (.+)-(.+)-(.+)-(.+) RSSI (.+)\r', line)
+            print('got serial in: {}'.format(line.rstrip()))
+            m = re.match('rx from (.) S: (.+)-(.+)-(.+)-(.+)-(.+)-(.+)-(.+)-(.+) RSSI (.+)\r', line)
+            # print(m)
             if m:
                 # print(m.groups())
                 frame_index = int(m.group(1))
-                self.rssi_by_frame[frame_index - 1] = int(m.group(6))
+                self.rssi_by_frame[frame_index - 1] = int(m.group(10))
 
                 values = []
-                for i in range(4):
+                for i in range(8):
                     s = m.group(i + 2)
                     s = int(s, 16)
                     if i % 2 == 0:
@@ -119,8 +120,9 @@ class Fantasmophone:
         print('play sound {} on chan {}'.format(sound_index, channel_index))
 
         # self.cur_playing_sounds.add(sound_index)
-        # serial code to wavtrigger goes here
+        # serial code to base goes here
         self.serial.write('P{}c{}\r'.format(sound_index, channel_index).encode('utf-8'))
+        self.serial.flush()
 
     def set_led_values(self, intensities, colors):
         self.led_colors = colors
@@ -137,7 +139,7 @@ class SoundPalette:
     all_sounds = []
 
     def __init__(self):
-        self.all_sounds = range(24)  # customize per palette
+        self.all_sounds = range(500)  # customize per palette
 
     def get_sound(self, index):
         return self.all_sounds[index]
@@ -146,21 +148,21 @@ class SoundPalette:
 def setup():
     fan.initialize()
     print('Time to set up!')
-    print('Touch group 1 sensors. When you are done hit enter.')
-    while True:
-        fan.update()
-        sv = fan.get_sensor_values()
-        if sv['changed']:
-            # print(sv)
-            # sensors changed so do something about it
-            for sensor_index in sv['which_sensors_changed']:
-                print(sensor_index[1])
-                fan.group1.append(sensor_index)
-        time.sleep(1 / 100)
-        if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
-            line = input()
-            break
-    print('Group 1 sensors: {}'.format(fan.group1))
+    # print('Touch group 1 sensors. When you are done hit enter.')
+    # while True:
+    #     fan.update()
+    #     sv = fan.get_sensor_values()
+    #     if sv['changed']:
+    #         # print(sv)
+    #         # sensors changed so do something about it
+    #         for sensor_index in sv['which_sensors_changed']:
+    #             print(sensor_index[1])
+    #             fan.group1.append(sensor_index)
+    #     time.sleep(1 / 100)
+    #     if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
+    #         line = input()
+    #         break
+    # print('Group 1 sensors: {}'.format(fan.group1))
 
 
 def loop():
