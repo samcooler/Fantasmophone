@@ -13,7 +13,7 @@
 #define MY_ADDRESS    0
 #define ENABLE_FRAME_SLEEP  0
 #define SLEEP_COUNT 3 // how many times to retry before sleep
-#define LOOP_DELAY 10 // T frame rate
+#define LOOP_DELAY 0 // T frame rate
 #define RX_WAIT_TIMEOUT 20
 #define RF_RETRY_STEP_COUNT  300
 
