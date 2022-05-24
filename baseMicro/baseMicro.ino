@@ -11,6 +11,7 @@
 #define RF69_FREQ 915.0
 
 #define MY_ADDRESS    0
+#define NUM_SENSORS  48
 #define ENABLE_FRAME_SLEEP  0
 #define SLEEP_COUNT 3 // how many times to retry before sleep
 #define LOOP_DELAY 0 // T frame rate
@@ -95,14 +96,14 @@ int sound_id = 0;
 int channel_id = 0;
 int request_mode = 0;
 int led_frame = 1;
-uint8_t led_data[48] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+uint8_t led_data[NUM_SENSORS] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 int led_count = 0;
 
 void loop() {
   delay(LOOP_DELAY);
 
   led_frame = 0;
-  for (int i = 0; i < 48; i++) led_data[i] = 0;
+  for (int i = 0; i < NUM_SENSORS; i++) led_data[i] = 0;
 
   // receive data from the CPU
   while (Serial.available() > 0) {
@@ -135,15 +136,16 @@ void loop() {
     // update LED values
     if (serial_rx == 'L') {
       led_frame = Serial.parseInt();
-      Serial.read(); // skip separater
-      led_count = Serial.parseInt();
-      Serial.read();
+//      Serial.read(); // skip separater
+//      led_count = Serial.parseInt();
+//      Serial.read();
 
       Serial.print("got LEDs ");
-      Serial.print(led_count);
+//      Serial.print(led_count);
       Serial.print(":");
-      for (int si = 0; si < led_count; si++) {
-        led_data[si] = Serial.parseInt();
+      int input
+      for (int si = 0; si < NUM_SENSORS; si++) {
+        input = Serial.parseInt() + Serial.parseInt(;
         Serial.print(led_data[si]);
         Serial.print(' ');
       }
