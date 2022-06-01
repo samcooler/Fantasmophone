@@ -44,134 +44,134 @@
 // **************************************************************
 void masterGain(int out, int gain) {
 
-uint8_t txbuf[8];
-unsigned short vol;
-uint8_t o;
+    uint8_t txbuf[8];
+    unsigned short vol;
+    uint8_t o;
 
-  o = out & 0x07;
-  txbuf[0] = SOM1;
-  txbuf[1] = SOM2;
-  txbuf[2] = 0x08;
-  txbuf[3] = CMD_MASTER_VOLUME;
-  txbuf[4] = o;
-  vol = (unsigned short)gain;
-  txbuf[5] = (uint8_t)vol;
-  txbuf[6] = (uint8_t)(vol >> 8);
-  txbuf[7] = EOM;
-  TsunamiSerial.write(txbuf, 8);
+    o = out & 0x07;
+    txbuf[0] = SOM1;
+    txbuf[1] = SOM2;
+    txbuf[2] = 0x08;
+    txbuf[3] = CMD_MASTER_VOLUME;
+    txbuf[4] = o;
+    vol = (unsigned short) gain;
+    txbuf[5] = (uint8_t) vol;
+    txbuf[6] = (uint8_t)(vol >> 8);
+    txbuf[7] = EOM;
+    TsunamiSerial.write(txbuf, 8);
 }
 
 // **************************************************************
 void setReporting(bool enable) {
 
-uint8_t txbuf[6];
+    uint8_t txbuf[6];
 
-  txbuf[0] = SOM1;
-  txbuf[1] = SOM2;
-  txbuf[2] = 0x06;
-  txbuf[3] = CMD_SET_REPORTING;
-  txbuf[4] = enable;
-  txbuf[5] = EOM;
-  TsunamiSerial.write(txbuf, 6);
+    txbuf[0] = SOM1;
+    txbuf[1] = SOM2;
+    txbuf[2] = 0x06;
+    txbuf[3] = CMD_SET_REPORTING;
+    txbuf[4] = enable;
+    txbuf[5] = EOM;
+    TsunamiSerial.write(txbuf, 6);
 }
 
 
 // **************************************************************
 void trackPlayPoly(int trk, int out, bool lock) {
-  
-int flags = 0;
 
-  if (lock)
-    flags |= 0x01;
-  trackControl(trk, TRK_PLAY_POLY, out, flags);
+    int flags = 0;
+
+    if (lock)
+        flags |= 0x01;
+    trackControl(trk, TRK_PLAY_POLY, out, flags);
 }
 
 // **************************************************************
 void trackStop(int trk) {
 
-  trackControl(trk, TRK_STOP, 0, 0);
+    trackControl(trk, TRK_STOP, 0, 0);
 }
 
 
 // **************************************************************
 void trackLoop(int trk, bool enable) {
- 
-  if (enable)
-  trackControl(trk, TRK_LOOP_ON, 0, 0);
-  else
-  trackControl(trk, TRK_LOOP_OFF, 0, 0);
+
+    if (enable)
+        trackControl(trk, TRK_LOOP_ON, 0, 0);
+    else
+        trackControl(trk, TRK_LOOP_OFF, 0, 0);
 }
 
 // **************************************************************
 void trackControl(int trk, int code, int out, int flags) {
-  
-uint8_t txbuf[10];
-uint8_t o;
 
-  o = out & 0x07;
-  txbuf[0] = SOM1;
-  txbuf[1] = SOM2;
-  txbuf[2] = 0x0a;
-  txbuf[3] = CMD_TRACK_CONTROL;
-  txbuf[4] = (uint8_t)code;
-  txbuf[5] = (uint8_t)trk;
-  txbuf[6] = (uint8_t)(trk >> 8);
-  txbuf[7] = (uint8_t)o;
-  txbuf[8] = (uint8_t)flags;
-  txbuf[9] = EOM;
-  TsunamiSerial.write(txbuf, 10);
+    uint8_t txbuf[10];
+    uint8_t o;
+
+    o = out & 0x07;
+    txbuf[0] = SOM1;
+    txbuf[1] = SOM2;
+    txbuf[2] = 0x0a;
+    txbuf[3] = CMD_TRACK_CONTROL;
+    txbuf[4] = (uint8_t) code;
+    txbuf[5] = (uint8_t) trk;
+    txbuf[6] = (uint8_t)(trk >> 8);
+    txbuf[7] = (uint8_t) o;
+    txbuf[8] = (uint8_t) flags;
+    txbuf[9] = EOM;
+    TsunamiSerial.write(txbuf, 10);
 }
 
 // **************************************************************
 void stopAllTracks(void) {
 
-uint8_t txbuf[5];
+    uint8_t txbuf[5];
 
-  txbuf[0] = SOM1;
-  txbuf[1] = SOM2;
-  txbuf[2] = 0x05;
-  txbuf[3] = CMD_STOP_ALL;
-  txbuf[4] = EOM;
-  TsunamiSerial.write(txbuf, 5);
+    txbuf[0] = SOM1;
+    txbuf[1] = SOM2;
+    txbuf[2] = 0x05;
+    txbuf[3] = CMD_STOP_ALL;
+    txbuf[4] = EOM;
+    TsunamiSerial.write(txbuf, 5);
 }
 
 // **************************************************************
 void trackGain(int trk, int gain) {
 
-uint8_t txbuf[9];
-unsigned short vol;
+    uint8_t txbuf[9];
+    unsigned short vol;
 
-  txbuf[0] = SOM1;
-  txbuf[1] = SOM2;
-  txbuf[2] = 0x09;
-  txbuf[3] = CMD_TRACK_VOLUME;
-  txbuf[4] = (uint8_t)trk;
-  txbuf[5] = (uint8_t)(trk >> 8);
-  vol = (unsigned short)gain;
-  txbuf[6] = (uint8_t)vol;
-  txbuf[7] = (uint8_t)(vol >> 8);
-  txbuf[8] = EOM;
-  TsunamiSerial.write(txbuf, 9);
+    txbuf[0] = SOM1;
+    txbuf[1] = SOM2;
+    txbuf[2] = 0x09;
+    txbuf[3] = CMD_TRACK_VOLUME;
+    txbuf[4] = (uint8_t) trk;
+    txbuf[5] = (uint8_t)(trk >> 8);
+    vol = (unsigned short) gain;
+    txbuf[6] = (uint8_t) vol;
+    txbuf[7] = (uint8_t)(vol >> 8);
+    txbuf[8] = EOM;
+    TsunamiSerial.write(txbuf, 9);
 }
 
 // **************************************************************
 void trackFade(int trk, int gain, int time, bool stopFlag) {
 
-uint8_t txbuf[12];
-unsigned short vol;
+    uint8_t txbuf[12];
+    unsigned short vol;
 
-  txbuf[0] = SOM1;
-  txbuf[1] = SOM2;
-  txbuf[2] = 0x0c;
-  txbuf[3] = CMD_TRACK_FADE;
-  txbuf[4] = (uint8_t)trk;
-  txbuf[5] = (uint8_t)(trk >> 8);
-  vol = (unsigned short)gain;
-  txbuf[6] = (uint8_t)vol;
-  txbuf[7] = (uint8_t)(vol >> 8);
-  txbuf[8] = (uint8_t)time;
-  txbuf[9] = (uint8_t)(time >> 8);
-  txbuf[10] = stopFlag;
-  txbuf[11] = EOM;
-  TsunamiSerial.write(txbuf, 12);
+    txbuf[0] = SOM1;
+    txbuf[1] = SOM2;
+    txbuf[2] = 0x0c;
+    txbuf[3] = CMD_TRACK_FADE;
+    txbuf[4] = (uint8_t) trk;
+    txbuf[5] = (uint8_t)(trk >> 8);
+    vol = (unsigned short) gain;
+    txbuf[6] = (uint8_t) vol;
+    txbuf[7] = (uint8_t)(vol >> 8);
+    txbuf[8] = (uint8_t) time;
+    txbuf[9] = (uint8_t)(time >> 8);
+    txbuf[10] = stopFlag;
+    txbuf[11] = EOM;
+    TsunamiSerial.write(txbuf, 12);
 }
