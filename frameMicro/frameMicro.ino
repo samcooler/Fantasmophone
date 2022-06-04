@@ -25,9 +25,23 @@ uint8_t buf_tx[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
 uint8_t buf_rx[RH_RF69_MAX_MESSAGE_LEN];
 
 // LED SETUP
-const int ledsPerleds = 144 * 4;
-const int ledledsOffset = 0;
-Adafruit_DotStar leds(ledsPerleds, DOTSTAR_BRG);
+
+#define NUM_BUTTONS   48
+const int NUM_LEDS = 60*4; //144 * 4;
+const int LED_OFFSET = 0;
+// WORLD SETUP
+const int numSpots = NUM_BUTTONS;
+const int spotHalfWidth = 2;
+const float boundary = 0.01;
+const float luminanceMult = 20;
+const int cap_thresh_0 = 12;
+const int cap_thresh_1 = 6;
+//const float TOUCH_DELAY_TIME_S = 0.1;
+
+
+#define DATAPIN    A4
+#define CLOCKPIN   A5
+Adafruit_DotStar leds(NUM_LEDS, DATAPIN, CLOCKPIN, DOTSTAR_BRG);
 
 // TOUCH SENSOR SETUP
 // for (int i=0; i<numCapBoards; i++) {
@@ -48,7 +62,7 @@ void printLine(T first, Types... other) {
     printLine(other...);
 }
 
-#define NUM_BUTTONS   48
+
 
 uint16_t curr_touched_1 = 0;
 uint16_t curr_touched_2 = 0;
@@ -63,7 +77,6 @@ uint16_t touched_since_reset_4 = 0;
 float time_touch_started[NUM_BUTTONS] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-
 // SENSOR TO LIGHT MATRIX
 int ledStates[NUM_BUTTONS] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -72,14 +85,7 @@ bool touched_now[NUM_BUTTONS] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 //const int sensorFromSpotIndex[12] = {0, 3, 7, 8, 9, 10, 1, 11, 6, 5, 4, 2};
 //const int sensorToOutputIndex[12] = {0, 3, 7, 8, 9, 10, 1, 11, 6, 5, 4, 2};
 
-// WORLD SETUP
-const int numSpots = NUM_BUTTONS;
-const int spotHalfWidth = 5;
-const float boundary = 0.01;
-const float luminanceMult = 20;
-const int cap_thresh_0 = 12;
-const int cap_thresh_1 = 6;
-const float TOUCH_DELAY_TIME_S = 0.1;
+
 
 class Spot {
 public:
@@ -126,7 +132,7 @@ void Spot::move() {
 
 bool Spot::active(float t) {
     if (t_start < 0) { return false; }
-    return (t - t_start) / t_decay < 6;
+    return (t - t_start) / t_decay < 4;
 }
 
 float Spot::light(float t) {
@@ -231,18 +237,17 @@ void setup() {
 //     spots[i].color = (centerColor + colors[i % 6] + (2 * random(2) - 1) * random(20)) % 360;
         spots[i].color = random(360);
     }
-
-
     leds.begin();
-    //  for (int i = 0; i < ledsPerleds * 8; i++) {
+    //  for (int i = 0; i < NUM_LEDS * 8; i++) {
     //    leds.setPixelColor(i, makeColor(centerColor, 100, 50));
     //  }
     //  leds.setBrightness(50);
     //  leds.show();
     //  delay(1000);
-    for (int i = 0; i < ledsPerleds * 8; i++) {
-        leds.setPixelColor(i, 0, 0, 0);
+    for (int i = 0; i < NUM_LEDS; i++) {
+        leds.setPixelColor(i, 120, 20, 0);
     }
+    leds.setBrightness(50);
     leds.show();
     Serial.println("done with setup. Starting rx loop");
 }
@@ -311,7 +316,7 @@ void loop() {
     touched_since_reset_4 = touched_since_reset_4 | curr_touched_4;
 
     // render spots and send to LEDs
-//    drawSpots(t);
+    drawSpots(t);
 
     // look for a message from the base
     if (rf69.available()) {
@@ -375,26 +380,28 @@ void loop() {
 
 void drawSpots(float t) {
     for (int i = 0; i < numSpots; i++) {
+//        printLine("drawing spot ", i);
         if (!spots[i].active(t)) {
             continue;
         }
 
-        float center = spots[i].location * ledsPerleds + ledledsOffset + offsetBySpot[i];
+        float center = spots[i].location * NUM_LEDS + LED_OFFSET + offsetBySpot[i];
         int ledLocation = round(center);
         int colorOffset = 0;
         float luminance;
         float light = spots[i].light(t);
 
-//     printLine("drawing spot ", i, " at ", center);
+        printLine("spot ", i, " at location ", center);
 
         // draw across width of spot
         for (int offset = -1 * spotHalfWidth; offset <= spotHalfWidth; offset++) {
             int led = ledLocation + offset;
-            if (led >= 0 && led <= ledsPerleds) {
+            if (led >= 0 && led <= NUM_LEDS) {
                 luminance = light * luminanceMult * min(1.3 - abs(center - led) / spotHalfWidth, 1.0);
                 colorOffset = 0;//10 * (spotHalfWidth - abs(offset));
+//                printLine(
                 leds.setPixelColor(led, makeColor((spots[i].color + colorOffset) % 360, 100, luminance));
-//         printLine(t, led," ", light, " ", luminance);
+//                printLine(t, led," ", light, " ", luminance);
             }
         }
     }

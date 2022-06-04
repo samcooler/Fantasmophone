@@ -14,10 +14,10 @@
 #define  NUM_BUTTONS  48
 #define ENABLE_FRAME_SLEEP  0
 #define SLEEP_COUNT 3 // how many times to retry before sleep
-#define LOOP_DELAY 0 // T frame rate
+#define LOOP_DELAY 50 // T frame rate
 #define RX_WAIT_TIMEOUT 20
 #define RF_RETRY_STEP_COUNT  300
-#define NUM_SOUND_CHANNELS 2
+#define NUM_CHANNELS 2
 #define NUM_SOUNDS 24
 
 #if defined(ADAFRUIT_FEATHER_M0) // Feather M0 w/Radio
@@ -59,17 +59,22 @@ bool touched_now[NUM_BUTTONS] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 bool touched_last[NUM_BUTTONS] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 uint16_t sound_map[NUM_BUTTONS] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48};
+uint8_t channel_map[NUM_BUTTONS] = {0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1};
+bool repeat_map[NUM_BUTTONS] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-void playSound(uint8_t bi, int channel) {
+void playSound(uint16_t sound, int channel) {
     if (channel == -1) {
-        channel = random(NUM_SOUND_CHANNELS) + 1;
+        channel = random(NUM_CHANNELS);
     }
-    printLine("Playing sound ", sound_map[bi], " on channel ", channel);
-    trackPlayPoly(sound_map[bi], channel, 1);
+    printLine("Playing sound ", sound, " on channel ", channel);
+    trackPlayPoly(sound, channel, 1);
+}
+void playSoundButton(uint8_t bi) {
+    playSound(sound_map[bi], channel_map[bi]);
 }
 
 void setup() {
-    Serial.begin(1000000); // USB serial
+    Serial.begin(57600); // USB serial
 
     Serial1.begin(57600); // tsunami serial
     //while (!Serial) { delay(1); } // wait until serial console is open, remove if not tethered to computer
@@ -101,19 +106,39 @@ void setup() {
 
     printLine("RFM69 radio @", (int) RF69_FREQ, " MHz");
 
-    Serial.println("begin audio test");
-    for(int ci = 0; ci < NUM_SOUND_CHANNELS; ci++) {
-        playSound(1, ci);
-        delay(300);
-    }
+//    masterGain()
 
-    // setup random sounds on the buttons for fail-fun feature
-    for (int bi=0; bi < NUM_BUTTONS; bi++) {
-        sound_map[bi] = random(NUM_SOUNDS);
+//    while (1) {
+//        Serial.println("begin audio test");
+//        trackPlayPoly(1, 0, 1);
+//        delay(2000);
+//        trackPlayPoly(1, 1, 1);
+//        delay(2000);
+//    }
+//    trackPlayPoly(2, 1, 1);
+//    delay(1000);
+//    trackPlayPoly(2, 1, 1);
+//    while (1) {
+    for (int ci = 0; ci < NUM_CHANNELS; ci++) {
+        playSound(ci + 1, ci);
+        delay(1000);
     }
+//    }
+//
+    // setup random sounds on the buttons for fail-fun feature
+    Serial.print("Random sound map is ");
+    for (int bi=0; bi < NUM_BUTTONS; bi++) {
+        sound_map[bi] = random(NUM_SOUNDS) + 1;
+        channel_map[bi] = random(NUM_CHANNELS);
+        Serial.print(sound_map[bi]);
+        Serial.print(" ");
+    }
+    Serial.println();
 }
 
 void loop() {
+
+//    return;
     delay(LOOP_DELAY);
 
     led_frame = 0;
@@ -191,8 +216,6 @@ void loop() {
                 continue;
             }
         }
-
-
 //        if (frameIndex == led_frame) {
 //            buf_tx[1] = 'L';
 ////            buf_tx[2] = led_count;
@@ -208,7 +231,6 @@ void loop() {
         //      sprintf(buf_tx, " S");
         //    }
         buf_tx[0] = frameIndex;
-
 
         Serial.print("tx to ");
         Serial.print(frameIndex);
@@ -241,7 +263,7 @@ void loop() {
                 for (uint8_t buf_i = 0; buf_i < 8; buf_i++) {
                     for (uint8_t i = 0; i < 12; i++) {
                         if (buf_rx[buf_i+1] & _BV(i)) {
-                            touched_now[i + buf_i * 12] = true;
+                            touched_now[i + buf_i * 8] = true;
                         }
                     }
                 }
@@ -249,10 +271,14 @@ void loop() {
                 for (uint8_t bi = 0; bi < NUM_BUTTONS; bi++) {
                     if (touched_now[bi] & ~touched_last[bi]) {
                         printLine("new press on ", bi);
-                        playSound(bi, -1);
+                        playSoundButton(bi);
 //                        trackPlayPoly(1, 1, 1);
                     }
                     touched_last[bi] = touched_now[bi];
+                }
+
+                for (uint8_t bi = 0; bi < 12; bi++) {
+                    Serial.print(touched_now[bi]);
                 }
             }
 

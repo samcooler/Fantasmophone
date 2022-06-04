@@ -1,16 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="CMakeSettings">
+    <configurations>
+      <configuration PROFILE_NAME="Debug" ENABLED="true" CONFIG_NAME="Debug" />
+    </configurations>
+  </component>
   <component name="ChangeListManager">
     <list default="true" id="b9e4126a-e51c-4113-8608-9606ec68d890" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/baseMicro/baseMicro.ino" beforeDir="false" afterPath="$PROJECT_DIR$/baseMicro/baseMicro.ino" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fantasmophone_main.py" beforeDir="false" afterPath="$PROJECT_DIR$/fantasmophone_main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frameMicro/frameMicro.ino" beforeDir="false" afterPath="$PROJECT_DIR$/frameMicro/frameMicro.ino" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
   </component>
   <component name="CoverageDataManager">
     <SUITE FILE_PATH="coverage/Fantasmophone$fantasmophone_main.coverage" NAME="fantasmophone_main Coverage Results" MODIFIED="1585101733626" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
@@ -33,6 +40,9 @@
       </list>
     </option>
   </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
   <component name="ProjectFrameBounds">
     <option name="x" value="288" />
     <option name="y" value="133" />
@@ -53,14 +63,15 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">
-    <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="com.intellij.ide.scratch.ScratchImplUtil$2/New Scratch File" value="Cython" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
-    <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
-    <property name="nodejs_npm_path_reset_for_default_project" value="true" />
-    <property name="settings.editor.selected.configurable" value="editor.preferences.fonts.default" />
-  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
+    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.fileTypes&quot;
+  }
+}</component>
   <component name="RunManager" selected="Python.fantasmophone_main">
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
       <module name="Fantasmophone" />
@@ -163,6 +174,13 @@
       <workItem from="1653113969073" duration="5870000" />
       <workItem from="1653193225080" duration="11349000" />
       <workItem from="1653281154484" duration="2838000" />
+      <workItem from="1653787755618" duration="3336000" />
+      <workItem from="1653868170055" duration="4499000" />
+      <workItem from="1653936743220" duration="1089000" />
+      <workItem from="1653983405275" duration="324000" />
+      <workItem from="1654058898521" duration="271000" />
+      <workItem from="1654059181134" duration="3960000" />
+      <workItem from="1654316965066" duration="9062000" />
     </task>
     <servers />
   </component>
@@ -198,8 +216,9 @@
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
-  <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/Fantasmophone$fantasmophone_main.coverage" NAME="fantasmophone_main Coverage Results" MODIFIED="1653283501516" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/fantasmophone_main.py">
