@@ -6,6 +6,7 @@ import numpy as np
 class Fantasmophone:
     num_frames = 1
     num_sensors_by_frame = (48, 12, 12)
+    num_sounds = 24
 
     rssi_by_frame = [0] * num_frames
     cur_sensor_values = []
@@ -22,12 +23,16 @@ class Fantasmophone:
     led_colors = []
     led_decays = []
 
+    button_sounds = []
+    button_channels = []
+    button_repeats = []
+
     for fi in range(num_frames):
         led_intensities.append([0] * num_sensors_by_frame[fi])
         led_colors.append([0] * num_sensors_by_frame[fi])
 
-    num_audio_channels = 2
-    audio_channel_offset = 0
+    num_audio_channels = 6
+    audio_channel_offset = 2
     cur_playing_sounds = set()
 
     serial = None
@@ -40,7 +45,7 @@ class Fantasmophone:
         # usbmodem1423401
 
         while True:
-            ports = glob.glob('/dev/tty.usbmodem142201')
+            ports = glob.glob('/dev/tty.usbmodem*')
             # ports = glob.glob('/dev/ttyACM*')
             if len(ports) == 0:
                 time.sleep(1)
@@ -117,30 +122,43 @@ class Fantasmophone:
         self.which_sensors_changed = []
         return ret
 
-    def play_sound(self, sound_index, channel_index):
+    def play_sound(self, sound_index, channel_index, repeat=False):
 
         channel_index += self.audio_channel_offset
         print('play sound {} on chan {}'.format(sound_index, channel_index))
 
         # self.cur_playing_sounds.add(sound_index)
         # serial code to base goes here
-        self.serial.write('P{}c{}\r'.format(sound_index, channel_index).encode('utf-8'))
+        self.serial.write(f'P{sound_index}c{channel_index}r{1*repeat}\r'.encode('utf-8'))
         self.serial.flush()
 
-    def set_led_values(self, colors, decays, periods):
-        self.led_colors = colors # 0 to 1
-        self.led_periods = periods #
-        self.led_decays = decays
+    def tx_button_sound_values(self):
+        out = f'V{"-".join([f"{s},{c},{r*1}" for s, c, r in zip(self.button_sounds, self.button_channels, self.button_repeats)])}'
+        print(f'writing sound values:\n{out}')
+        self.serial.write(out.encode('utf-8'))
+        self.serial.flush()
 
+    def randomize_sounds(self):
+        self.button_sounds = [random.randint(0, self.num_sounds)+1 for a in range(self.num_sensors_by_frame[0])]
+        self.button_channels = [random.randint(0, self.num_audio_channels) for a in range(self.num_sensors_by_frame[0])]
+        self.button_repeats = [random.random() > 0.7 for a in range(self.num_sensors_by_frame[0])]
+
+    def tx_led_values(self):
         # todo: serial code to send LED data goes here
-        colors = [int(255 * c) for c in colors]
-        periods = [int(np.clip(2 / p, 0, 15)) for p in periods] # 2 * frequency
-        decays = [int(np.clip(2 * d, 0, 15)) for d in decays] # 2 * decay
+        colors = [int(255 * c) for c in self.led_colors]
+        periods = [int(np.clip(2 / p, 0, 15)) for p in self.led_periods] # 2 * frequency
+        decays = [int(np.clip(2 * d, 0, 15)) for d in self.led_decays] # 2 * decay
 
         led_data = zip(colors, periods, decays)
         led_data = 'L,0,' + ','.join([f'{l[0]:02X},{l[1]:X},{l[2]:X}' for l in led_data])
         print(f'LED data: {led_data}')
         self.serial.write(led_data.encode('utf-8'))
+        self.serial.flush()
+
+    def randomize_leds(self):
+        self.colors = [random.random() for r in range(fan.num_sensors_by_frame[0])]
+        self.led_colors = [random.random() * 3 for r in range(fan.num_sensors_by_frame[0])]
+        self.led_periods = [random.random() * 1 for r in range(fan.num_sensors_by_frame[0])]
 
 
 class SoundPalette:
@@ -155,26 +173,11 @@ def setup():
     fan.initialize()
     print('Time to set up!')
 
-    colors = [random.random() for r in range(fan.num_sensors_by_frame[0])]
-    decays = [random.random() * 3 for r in range(fan.num_sensors_by_frame[0])]
-    periods = [random.random() * 1 for r in range(fan.num_sensors_by_frame[0])]
+    # fan.randomize_leds()
+    # fan.tx_led_values()
 
-    fan.set_led_values(colors, decays, periods)
-    # print('Touch group 1 sensors. When you are done hit enter.')
-    # while True:
-    #     fan.update()
-    #     sv = fan.get_sensor_values()
-    #     if sv['changed']:
-    #         # print(sv)
-    #         # sensors changed so do something about it
-    #         for sensor_index in sv['which_sensors_changed']:
-    #             print(sensor_index[1])
-    #             fan.group1.append(sensor_index)
-    #     time.sleep(1 / 100)
-    #     if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
-    #         line = input()
-    #         break
-    # print('Group 1 sensors: {}'.format(fan.group1))
+    fan.randomize_sounds()
+    fan.tx_button_sound_values()
 
 
 def loop():
@@ -196,7 +199,8 @@ def loop():
             if sv['values'][sensor_index[0]][sensor_index[1]]:  # play if now True
                 # map sensors to sound index using a palette
                 sound_index = pals[cur_pal].get_sound(sensor_index[1])
-                fan.play_sound(sound_index, random.randint(0, fan.num_audio_channels - 1))
+                print('probably playing sound')
+                # fan.play_sound(sound_index, random.randint(0, fan.num_audio_channels - 1))
                 # todo: cache sound changes together in a list then execute in a batch
 
                 # todo: modulate sounds dynamically for fun
