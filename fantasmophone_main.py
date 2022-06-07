@@ -18,10 +18,9 @@ class Fantasmophone:
     sensors_changed_flag = False
     which_sensors_changed = []
 
-    led_intensities = []
-    led_periods = []
     led_colors = []
     led_decays = []
+    led_periods = []
 
     button_sounds = []
     button_channels = []
@@ -156,8 +155,8 @@ class Fantasmophone:
         self.serial.flush()
 
     def randomize_leds(self):
-        self.colors = [random.random() for r in range(fan.num_sensors_by_frame[0])]
-        self.led_colors = [random.random() * 3 for r in range(fan.num_sensors_by_frame[0])]
+        self.led_colors = [random.random() for r in range(fan.num_sensors_by_frame[0])]
+        self.led_decays = [random.random() * 3 for r in range(fan.num_sensors_by_frame[0])]
         self.led_periods = [random.random() * 1 for r in range(fan.num_sensors_by_frame[0])]
 
 
