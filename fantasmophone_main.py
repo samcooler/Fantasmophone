@@ -4,6 +4,9 @@ import numpy as np
 
 
 class Fantasmophone:
+    serial = None
+    serial_port = '/dev/tty.usbmodem*'
+
     num_frames = 1
     num_sensors_by_frame = (48, 12, 12)
     num_sounds = 24
@@ -26,37 +29,37 @@ class Fantasmophone:
     button_channels = []
     button_repeats = []
 
-    for fi in range(num_frames):
-        led_intensities.append([0] * num_sensors_by_frame[fi])
-        led_colors.append([0] * num_sensors_by_frame[fi])
 
     num_audio_channels = 6
     audio_channel_offset = 2
-    cur_playing_sounds = set()
-
-    serial = None
+    # cur_playing_sounds = set()
 
     # group1 = []
 
-    def initialize(self):
+    def initialize(self, enable_serial=True):
         print('Fantasmophone init')
         # set up serial connection
         # usbmodem1423401
 
-        while True:
-            ports = glob.glob('/dev/tty.usbmodem*')
-            # ports = glob.glob('/dev/ttyACM*')
-            if len(ports) == 0:
-                time.sleep(1)
-                print('no matching ports')
-                continue
-            try:
-                self.serial = serial.Serial(ports[0], 1000000, timeout=0.5)
-                print('set up serial at {}'.format(self.serial.name))
-                break
-            except serial.SerialException:
-                print('failed serial setup at {}'.format(self.serial.name))
-                time.sleep(1)
+        if enable_serial:
+            print(f'checking for serial at {self.serial_port}')
+            while True:
+                ports = glob.glob(self.serial_port)
+                # ports = glob.glob('/dev/ttyACM*')
+                if len(ports) == 0:
+                    time.sleep(1)
+                    print('no matching ports')
+                    continue
+                try:
+                    self.serial = serial.Serial(ports[0], 1000000, timeout=0.5)
+                    print('set up serial at {}'.format(self.serial.name))
+                    break
+                except serial.SerialException:
+                    print('failed serial setup at {}'.format(self.serial.name))
+                    time.sleep(1)
+        else:
+            print('No serial enabled')
+
 
     def update(self):
         # print('Fantasmophone update')
@@ -128,14 +131,16 @@ class Fantasmophone:
 
         # self.cur_playing_sounds.add(sound_index)
         # serial code to base goes here
-        self.serial.write(f'P{sound_index}c{channel_index}r{1*repeat}\r'.encode('utf-8'))
-        self.serial.flush()
+        if self.serial is not None:
+            self.serial.write(f'P{sound_index}c{channel_index}r{1*repeat}\r'.encode('utf-8'))
+            self.serial.flush()
 
     def tx_button_sound_values(self):
         out = f'V{"-".join([f"{s},{c},{r*1}" for s, c, r in zip(self.button_sounds, self.button_channels, self.button_repeats)])}'
         print(f'writing sound values:\n{out}')
-        self.serial.write(out.encode('utf-8'))
-        self.serial.flush()
+        if self.serial is not None:
+            self.serial.write(out.encode('utf-8'))
+            self.serial.flush()
 
     def randomize_sounds(self):
         self.button_sounds = [random.randint(0, self.num_sounds)+1 for a in range(self.num_sensors_by_frame[0])]
@@ -151,8 +156,9 @@ class Fantasmophone:
         led_data = zip(colors, periods, decays)
         led_data = 'L,0,' + ','.join([f'{l[0]:02X},{l[1]:X},{l[2]:X}' for l in led_data])
         print(f'LED data: {led_data}')
-        self.serial.write(led_data.encode('utf-8'))
-        self.serial.flush()
+        if self.serial is not None:
+            self.serial.write(led_data.encode('utf-8'))
+            self.serial.flush()
 
     def randomize_leds(self):
         self.led_colors = [random.random() for r in range(fan.num_sensors_by_frame[0])]
@@ -169,11 +175,11 @@ class SoundPalette:
 
 
 def setup():
-    fan.initialize()
     print('Time to set up!')
+    fan.initialize(enable_serial=False)
 
-    # fan.randomize_leds()
-    # fan.tx_led_values()
+    fan.randomize_leds()
+    fan.tx_led_values()
 
     fan.randomize_sounds()
     fan.tx_button_sound_values()
@@ -185,7 +191,13 @@ def loop():
     #     # todo: add loop rate /s display
 
     # get serial updates, assemble fresh reporting data
-    fan.update()
+    if fan.serial is not None:
+        fan.update()
+
+    # else:
+        # might put some sensor simulated activations here
+        # fan.simulate_buttons()
+
 
     # use some sensors
     sv = fan.get_sensor_values()
@@ -215,9 +227,9 @@ if __name__ == '__main__':
     fan = Fantasmophone()
     loop_index = 0
 
-    num_palettes = 2
-    pals = [SoundPalette() for i in range(num_palettes)]
-    cur_pal = random.randint(0, 1)
+    # num_palettes = 2
+    # pals = [SoundPalette() for i in range(num_palettes)]
+    # cur_pal = random.randint(0, 1)
 
     setup()
 
