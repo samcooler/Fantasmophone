@@ -324,4 +324,6 @@ if __name__ == '__main__':
         #    t = time.perf_counter()
         #time.sleep(1 / 10000)
         fan.switch_sound()
+        fan.tx_button_sound_values()
+        fan.tx_led_values()
 
