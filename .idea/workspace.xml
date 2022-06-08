@@ -7,8 +7,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b9e4126a-e51c-4113-8608-9606ec68d890" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fantasmophone_main.py" beforeDir="false" afterPath="$PROJECT_DIR$/fantasmophone_main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/baseMicro/baseMicro.ino" beforeDir="false" afterPath="$PROJECT_DIR$/baseMicro/baseMicro.ino" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -62,9 +63,14 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">
-    <property name="WebServerToolWindowFactoryState" value="true" />
-  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true"
+  }
+}]]></component>
   <component name="RunManager" selected="Python.fantasmophone_main">
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
       <module name="Fantasmophone" />
@@ -175,7 +181,10 @@
       <workItem from="1654059181134" duration="3960000" />
       <workItem from="1654316965066" duration="9062000" />
       <workItem from="1654393152641" duration="9278000" />
-      <workItem from="1654644406281" duration="858000" />
+      <workItem from="1654644406281" duration="1371000" />
+      <workItem from="1654652558222" duration="1716000" />
+      <workItem from="1654665659415" duration="1145000" />
+      <workItem from="1654667792905" duration="2061000" />
     </task>
     <servers />
   </component>
@@ -214,9 +223,6 @@
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />
     <select />
-  </component>
-  <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/Fantasmophone$fantasmophone_main.coverage" NAME="fantasmophone_main Coverage Results" MODIFIED="1654407439896" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/fantasmophone_main.py">
