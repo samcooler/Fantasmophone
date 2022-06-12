@@ -63,7 +63,7 @@ class Fantasmophone:
 
 
     num_audio_channels = 6
-    audio_channel_offset = 2
+    audio_channel_offset = 0
     # cur_playing_sounds = set()
 
     # group1 = []
@@ -238,21 +238,13 @@ class Fantasmophone:
 
     def switch_sound(self):
         wait_time = np.random.exponential(self.switch_rate)
-        print(f'Waiting {wait_time*60} seconds\n')
+        print(f'Waiting {wait_time*60:.1f} seconds\n')
         time.sleep(wait_time*60)
         sens_ix = random.choices(self.sensor_table.index, k = 1)
         sound_ix = random.choices(self.sound_table.query("assigned == False").index, k = 1)
         print(f'Swapping out {self.sensor_table.sound_id[sens_ix[0]]} and swapping in {self.sound_table.sound_id[sound_ix[0]]}\n')
         self.swap_sounds(sens_ix, sound_ix)
 
-
-
-class SoundPalette:
-    all_sounds = []
-    def __init__(self):
-        self.all_sounds = range(500)  # customize per palette
-    def get_sound(self, index):
-        return self.all_sounds[index]
 
 
 def setup(): 
@@ -307,10 +299,6 @@ if __name__ == '__main__':
 
     fan = Fantasmophone()
     #loop_index = 0
-
-    # num_palettes = 2
-    # pals = [SoundPalette() for i in range(num_palettes)]
-    # cur_pal = random.randint(0, 1)
 
     setup()
 
