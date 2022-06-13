@@ -196,7 +196,7 @@ class Fantasmophone:
         decays = [int(np.clip(2 * d, 0, 15)) for d in self.sound_table.led_decay[sounds].to_list()] # 2 * decay
 
         led_data = zip(colors, periods, decays)
-        led_data = 'L,0,' + ','.join([f'{l[0]:02X},{l[1]:X},{l[2]:X}' for l in led_data])
+        led_data = 'L,' + ','.join([f'{l[0]:02X},{l[1]:X},{l[2]:X}' for l in led_data]) + 'X'
         print(f'LED data: {led_data}')
         if self.serial is not None:
             self.serial.write(led_data.encode('utf-8'))
