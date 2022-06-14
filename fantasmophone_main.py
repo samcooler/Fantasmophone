@@ -42,7 +42,20 @@ class Fantasmophone:
     nbr_margin = 1
 
     # Expected number of minutes between switches
-    switch_rate = 0.1
+    #switch_rate = 0.1 # also equal to 1/expected number of switches per minute
+    
+
+    reg_update_per_minute = 10 # Expected number of non-rotation updates per minute
+    #update_rate = 1.0/reg_update_per_minute
+    # For running later, set reg_update_per_minute to something like 0.1, one update every six minutes
+    rotation_per_minute = 2
+    #rotate_rate = 1.0/rotation_per_minute
+    minutes_per_full_rotation = 5
+    shift_width = nspiral/(rotation_per_minute*minutes_per_full_rotation)
+    total_update_rate = 1.0/(reg_update_per_minute + rotation_per_minute)
+    protate = rotation_per_minute*total_update_rate
+
+
     # Out of how many cycles will we switch a sound
     # -5 is from 1e5 loops per second
     #switch_thresh = -5 - log10(60) - log10(switch_rate)
@@ -341,15 +354,31 @@ class Fantasmophone:
         old_max = (self.max_pos - shift_width) % self.nspiral
         if self.min_pos > old_min: # sensor ids with outdated sounds
             old_sens_id  = self.sensor_info.query(f'absolute_position >= {old_min} and absolute_position < {self.min_pos}').index.to_list()
+            non_old_sens_id = self.sensor_info.query(f'absolute_position < {old_min} or absolute_position > {self.min_pos}').index.to_list()
         else:
             old_sens_id  = self.sensor_info.query(f'absolute_position >= {old_min} or absolute_position < {self.min_pos}').index.to_list()
+            non_old_sens_id = self.sensor_info.query(f'absolute_position < {old_min} and absolute_position > {self.min_pos}').index.to_list()
 
-        self.sensor_info["temp_sensor_pos"] = (self.sensor_info.sensor_position - old_min) % self.nspiral 
+        # Need to figure out how to order the sensors with outmoded sounds
+        # If nbr_margin = 1, sounds should always be in order within their size group
+        # So if there are non-outmoded sensors between outmoded sensors then the outmoded group spans 0, otherwise it does not
+        # Could be different for the different size groups so do this within the for loop
+
+        #self.sensor_info["temp_sensor_pos"] = (self.sensor_info.sensor_position - old_min) % self.nspiral 
+
 
         for ss in [1, 2, 3]:
-            old_sens_id_ss = self.sensor_info.loc[old_sens_id].query(f'sensor_size == {ss}').sort_values("temp_sensor_pos", ascending = True).index.to_list()
-            print(f'There are {len(old_sens_id_ss)} sensors of size {ss} with outmoded sounds.\n')
-            if len(old_sens_id_ss) > 0:
+            old_sens_pos = self.sensor_info.loc[old_sens_id].query(f'sensor_size == {ss}').sort_values("sensor_position").sensor_position.to_list()
+            print(f'There are {len(old_sens_pos)} sensors of size {ss} with outmoded sounds.\n')
+            if len(old_sens_pos) > 0:
+                non_old_sens_pos = self.sensor_info.loc[non_old_sens_id].query(f'sensor_size == {ss}').sort_values("sensor_position").sensor_position.to_list()
+                contig = all([ n > max(old_sens_pos) or n < min(old_sens_pos) for n in non_old_sens_pos])
+                if contig:
+                    old_sens_id_ss = self.sensor_info.loc[old_sens_id].query(f'sensor_size == {ss}').sort_values("sensor_position").index.to_list()
+                else:
+                    old_sens_id_ss = self.sensor_info.loc[old_sens_id].query(f'sensor_size == {ss} & sensor_position > {max(non_old_sens_pos)}').sort_values("sensor_position").index.to_list()
+                    old_sens_id_ss.extend(self.sensor_info.loc[old_sens_id].query(f'sensor_size == {ss} & sensor_position < {min(non_old_sens_pos)}').sort_values("sensor_position").index.to_list())
+
                 # largest position currently in sensor table
                 ss_mx = self.get_max_pos(old_min, old_max, ss)
                 new_sound_id = self.active_sounds(ss_mx, self.max_pos)
@@ -362,19 +391,29 @@ class Fantasmophone:
                 new_sound_id_ss = self.sound_table.loc[new_sound_id].query(f'sensor_size == {ss}').sample(n = len(old_sens_id_ss), replace = repl).sort_values("temp_sound_pos", ascending = True).index.to_list()
                 self.swap_sounds(old_sens_id_ss, new_sound_id_ss)
 
-        self.sensor_info.drop("temp_sensor_pos", inplace = True, axis = 1)
+        #self.sensor_info.drop("temp_sensor_pos", inplace = True, axis = 1)
         self.sound_table.drop("temp_sound_pos", inplace = True, axis = 1)
                 
         
 
     def update_sound_regular(self):
-        wait_time = np.random.exponential(self.switch_rate)
-        print(f'Waiting {wait_time*60:.1f} seconds\n')
-        #time.sleep(wait_time*60)
         sound_id_in = self.select_swap_sound_regular()
         if(sound_id_in >=0):
             sens_id = self.find_swap_mate_regular(sound_id_in, nbr_margin = self.nbr_margin)
             self.swap_sounds(sens_id, [sound_id_in])
+
+    def run_update_sequence(self):
+        wait_time = np.random.exponential(self.total_update_rate)
+        event_type = np.random.binomial(n = 1, p = self.protate, size = 1)
+        print(f'Waiting {wait_time*60:.1f} seconds\n')
+        #time.sleep(wait_time*60)
+        if event_type[0] == 0:
+            print("Regular update\n")
+            self.update_sound_regular()
+        else:
+            print("Rotation update\n")
+            self.shift_spiral(self.shift_width)
+            self.hard_swap_after_shift(self.shift_width)
 
 
 
@@ -382,6 +421,8 @@ def setup():
     print('Time to set up!')
     fan.initialize(enable_serial=False) 
     fan.read_sound_table()
+    fan.read_sensor_info()
+    fan.assign_sounds_initial()
     #fan.randomize_leds()
 
     #fan.randomize_sounds()
@@ -442,7 +483,7 @@ if __name__ == '__main__':
         #    print('FPS: {:.0f} RSSI: {}'.format(200 / (time.perf_counter() - t), fan.rssi_by_frame))
         #    t = time.perf_counter()
         #time.sleep(1 / 10000)
-        fan.switch_sound()
+        fan.run_update_sequence()
         fan.tx_button_sound_values()
         fan.tx_led_values()
 
