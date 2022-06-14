@@ -406,7 +406,7 @@ class Fantasmophone:
         wait_time = np.random.exponential(self.total_update_rate)
         event_type = np.random.binomial(n = 1, p = self.protate, size = 1)
         print(f'Waiting {wait_time*60:.1f} seconds\n')
-        #time.sleep(wait_time*60)
+        time.sleep(wait_time*60)
         if event_type[0] == 0:
             print("Regular update\n")
             self.update_sound_regular()
