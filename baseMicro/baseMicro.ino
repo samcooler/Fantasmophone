@@ -14,7 +14,7 @@
 #define  NUM_BUTTONS  48
 #define ENABLE_FRAME_SLEEP  0
 #define SLEEP_COUNT 3 // how many times to retry before sleep
-#define LOOP_DELAY 50 // T frame rate
+#define LOOP_DELAY 300 // T frame rate
 #define RX_WAIT_TIMEOUT 20
 #define RF_RETRY_STEP_COUNT  300
 #define NUM_CHANNELS 8
@@ -50,6 +50,7 @@ void printLine(T first, Types... other) {
 
 uint8_t buf_rx[RH_RF69_MAX_MESSAGE_LEN];
 char buf_tx[RH_RF69_MAX_MESSAGE_LEN];
+//char buf_LED[RH_RF69_MAX_MESSAGE_LEN];
 int serial_rx = 0;
 int sound_id = 0;
 int channel_id = 0;
@@ -68,12 +69,13 @@ uint8_t sound_map[NUM_BUTTONS] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
                                    45, 46, 47, 48};
 uint8_t channel_map[NUM_BUTTONS] = {0, 1, 2, 3, 4, 5, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1,
                                     0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1};
-bool repeat_map[NUM_BUTTONS] = {1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+bool repeat_map[NUM_BUTTONS] = {1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 uint8_t gain_map[NUM_BUTTONS] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 uint8_t now_playing_map[NUM_BUTTONS] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+//uint8_t now_playing_bytes[6] = {0,0,0,0,0,0};
 
 void playSound(uint16_t sound, int channel) {
     if (channel == -1) {
@@ -91,7 +93,7 @@ void playSoundButton(uint8_t bi) {
             trackStop(now_playing_map[bi]);
             now_playing_map[bi] = 0;
         } else {
-            trackLoop(sound_map[bi], 1);
+//            trackLoop(sound_map[bi], 1);
             playSound(sound_map[bi], channel_map[bi]);
             now_playing_map[bi] = sound_map[bi];
         }
@@ -153,18 +155,18 @@ void setup() {
     Serial.println("audio test");
     for (int ci = 0; ci < NUM_CHANNELS; ci++) {
         playSound(ci + 10, ci);
-        delay(500);
+        delay(100);
     }
 
     // setup random sounds on the buttons for fail-fun feature
-    Serial.print("Random sound map is ");
-    for (int bi = 0; bi < NUM_BUTTONS; bi++) {
-        sound_map[bi] = random(NUM_SOUNDS) + 1;
-        channel_map[bi] = random(NUM_CHANNELS);
-        Serial.print(sound_map[bi]);
-        Serial.print(" ");
-    }
-    Serial.println();
+//    Serial.print("Random sound map is ");
+//    for (int bi = 0; bi < NUM_BUTTONS; bi++) {
+//        sound_map[bi] = random(NUM_SOUNDS) + 1;
+//        channel_map[bi] = random(NUM_CHANNELS);
+//        Serial.print(sound_map[bi]);
+//        Serial.print(" ");
+//    }
+//    Serial.println();
 
     setSoundParameters();
 }
@@ -175,7 +177,7 @@ void loop() {
     delay(LOOP_DELAY);
 
     led_frame = 0;
-    for (int i = 0; i < NUM_BUTTONS; i++) led_data[i] = 0;
+//    for (int i = 0; i < NUM_BUTTONS; i++) led_data[i] = 0;
 
     // receive data from the CPU
     while (Serial.available() > 0) {
@@ -188,23 +190,6 @@ void loop() {
             trackPlayPoly(sound_id, channel_id, 1);
 //      printLine("ack play ", sound_id, " on ", channel_id);
         }
-
-//        // change track gain
-//        if (serial_rx == 'G') {
-//            int sound_id = Serial.parseInt();
-//            Serial.read(); // skip separater
-//            int gain = Serial.parseInt();
-//            trackGain(sound_id, gain);
-//        }
-
-        // get frame info
-//        if (serial_rx == 'I') {
-//            //      trackPlayPoly(frame_id, 1, 1);
-//        }
-
-        // track fade
-        //    if(serial_rx == 'F') {
-
 
         // update button sound values
         if (serial_rx == 'V') {
@@ -225,8 +210,7 @@ void loop() {
 
         // update LED values
         if (serial_rx == 'L') {
-            led_frame = Serial.parseInt();
-//      Serial.read(); // skip separater
+//      Serial.read();
 //      led_count = Serial.parseInt();
 //      Serial.read();
 
@@ -267,29 +251,33 @@ void loop() {
                 continue;
             }
         }
-//        if (frameIndex == led_frame) {
-//            buf_tx[1] = 'L';
-//            for (int si = 0; si < led_count; si++) {
-//                buf_tx[si + 2] = led_data[si];
-//            }
-//        } else {
-        sprintf(buf_tx, " S");
-//        }
-        //    if (request_mode == 0) {
-        //      sprintf(buf_tx, " L%s", "101011011001010100101010101");
-        //    } else {
-        //      sprintf(buf_tx, " S");
-        //    }
+
+        sprintf(buf_tx, " Sxxxxxxxxxxx");
         buf_tx[0] = frameIndex;
+
+        uint8_t bi = 0;
+        uint8_t now_playing_byte = 0;
+        for(uint8_t byt = 0; byt < 6; byt++) {
+            now_playing_byte = 0;
+            for(uint8_t bit = 0; bit < 8; bit++) {
+                bi = byt * 8 + bit;
+                now_playing_byte += (now_playing_map[bi] > 0) << bit;
+            }
+            buf_tx[byt + 2] = now_playing_byte;
+        }
 
         Serial.print("tx to ");
         Serial.print(frameIndex);
         Serial.print(": ");
-        Serial.println(buf_tx);
+        for(int i = 0; i < 8; i++) {
+            Serial.print(buf_tx[i], BIN);
+            Serial.print(" ");
+        }
+        Serial.println();
 
         // Send a trigger message to the frame
         //    rf69_manager.sendtoWait((uint8_t *)buf_tx, strlen(buf_tx), frameIndex);
-        rf69.send((uint8_t *) buf_tx, strlen(buf_tx));
+        rf69.send((uint8_t *) buf_tx, 8);  // strlen(buf_tx)
         //    Serial.print("tx");
         //    Serial.println(radioPacket);
 

@@ -101,11 +101,10 @@ public:
     float period;
     float t_decay;
     float phase_start;
+    bool repeat_mode;
 
     bool active(float t);
-
     void move();
-
     float light(float t);
 };
 
@@ -119,6 +118,7 @@ Spot::Spot() {
     t_start = -1;
     period = .2;
     t_decay = .2;
+    repeat_mode = 1;
     phase_start = 0.1;
 }
 
@@ -131,7 +131,8 @@ void Spot::move() {
 }
 
 bool Spot::active(float t) {
-    if (t_start < 0) { return false; }
+    if (t_start <= 0) { return false; }
+    if (repeat_mode) { return true; }
     return (t - t_start) / t_decay < 4;
 }
 
@@ -139,7 +140,7 @@ float Spot::light(float t) {
     t = t - t_start;
     if (t < 0) { return 0; }
     float decay = 1.0;
-    if (t_decay > 0) {
+    if (!repeat_mode) {
         decay = exp(-t / t_decay);
     }
     float o = decay * (0.6 + 0.5 * amplitude * cos(t * 2 * 3.142 / period - phase_start * 2 * 3.142));
@@ -341,7 +342,26 @@ void loop() {
 //         updateSpotParams();
             }
             if (buf_rx[1] == 'S') {
-                Serial.println("Message type: sensor read");
+                Serial.println("Message type: sensor read w/ playing status");
+                uint8_t bi = 0;
+                uint8_t now_playing_byte = 0;
+
+                bool now_playing = 0;
+                for(uint8_t byt = 0; byt < 6; byt++) {
+                    for(uint8_t bit = 0; bit < 8; bit++) {
+                        bi = byt * 8 + bit;
+                        now_playing = buf_rx[byt + 2] & (1 << bit);
+
+                        // if spot was in repeat mode, but now is not playing, let it decay from here
+                        if(!now_playing & spots[bi].repeat_mode) {
+                            spots[bi].t_start = t;
+                            printLine("turning off repeat sound on ", bi);
+                        }
+                        // set repeat mode to the now_playing
+                        spots[bi].repeat_mode = now_playing;
+                    }
+                    buf_tx[byt + 2] = now_playing_byte;
+                }
             }
 
             // process touch sensors for reply
@@ -391,7 +411,7 @@ void drawSpots(float t) {
         float luminance;
         float light = spots[i].light(t);
 
-        printLine("spot ", i, " at location ", center);
+//        printLine("spot ", i, " at location ", center);
 
         // draw across width of spot
         for (int offset = -1 * spotHalfWidth; offset <= spotHalfWidth; offset++) {

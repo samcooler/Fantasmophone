@@ -7,9 +7,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b9e4126a-e51c-4113-8608-9606ec68d890" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/baseMicro/baseMicro.ino" beforeDir="false" afterPath="$PROJECT_DIR$/baseMicro/baseMicro.ino" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fantasmophone_main.py" beforeDir="false" afterPath="$PROJECT_DIR$/fantasmophone_main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frameMicro/frameMicro.ino" beforeDir="false" afterPath="$PROJECT_DIR$/frameMicro/frameMicro.ino" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -185,6 +186,9 @@
       <workItem from="1654652558222" duration="1716000" />
       <workItem from="1654665659415" duration="1145000" />
       <workItem from="1654667792905" duration="2061000" />
+      <workItem from="1655005391607" duration="1623000" />
+      <workItem from="1655007534597" duration="11730000" />
+      <workItem from="1655084519355" duration="2000" />
     </task>
     <servers />
   </component>
