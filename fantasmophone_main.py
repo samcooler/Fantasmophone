@@ -36,7 +36,7 @@ class Fantasmophone:
     rssi_by_frame = [0] * num_frames
 
     sound_table_file = "test_sounds.csv"
-    nspiral = 3
+    nspiral = 2
     sensor_info_file = "test_sensors.csv"
     small_length_cutoff = 4 # sounds longer than this go to medium sensors
     nbr_margin = 1
@@ -48,13 +48,19 @@ class Fantasmophone:
     reg_update_per_minute = 10 # Expected number of non-rotation updates per minute
     #update_rate = 1.0/reg_update_per_minute
     # For running later, set reg_update_per_minute to something like 0.1, one update every six minutes
-    rotation_per_minute = 2
+    rotation_per_minute = 5
     #rotate_rate = 1.0/rotation_per_minute
     minutes_per_full_rotation = 5
-    shift_width = nspiral/(rotation_per_minute*minutes_per_full_rotation)
+    if rotation_per_minute  > 0:
+        shift_width = nspiral/(rotation_per_minute*minutes_per_full_rotation)
+    else: 
+        shift_width = 0
     total_update_rate = 1.0/(reg_update_per_minute + rotation_per_minute)
     protate = rotation_per_minute*total_update_rate
 
+
+    caliper = 0.1
+    # Caliper controls how far away a sound can be in order to be assigned to a node
 
     # Out of how many cycles will we switch a sound
     # -5 is from 1e5 loops per second
@@ -250,20 +256,35 @@ class Fantasmophone:
         ax_sounds = self.active_sounds(self.min_pos, self.max_pos)
         #self.sound_table = self.sound_table.sort_values("position", ascending = True)
 
-        for ss in [1, 2, 3]:
-            num_ss_sounds = sum(self.sound_table.sensor_size[ax_sounds].eq(ss))
-            num_ss_sensor = sum(self.sensor_info.sensor_size.eq(ss))
-            repl =  num_ss_sounds < num_ss_sensor 
-            sound_id = self.sound_table.loc[ax_sounds].query(f'sensor_size == {ss}').sample(n = num_ss_sensor, replace = repl).sort_values("position", ascending = True).index
-            sens_id = self.sensor_info.query(f'sensor_size == {ss}').sort_values("sensor_position", ascending = True).index
-            self.sensor_info.loc[sens_id, "now_playing"] = sound_id
+        #for ss in [1, 2, 3]:
+        #    num_ss_sounds = sum(self.sound_table.sensor_size[ax_sounds].eq(ss))
+        #    num_ss_sensor = sum(self.sensor_info.sensor_size.eq(ss))
+        #    repl =  num_ss_sounds < num_ss_sensor 
+        #    sound_id = self.sound_table.loc[ax_sounds].query(f'sensor_size == {ss}').sample(n = num_ss_sensor, replace = repl).sort_values("position", ascending = True).index
+        #    sens_id = self.sensor_info.query(f'sensor_size == {ss}').sort_values("sensor_position", ascending = True).index
+        #    self.sensor_info.loc[sens_id, "now_playing"] = sound_id
+#
+#        self.sensor_info["position"] = self.sound_table.position[self.sensor_info.now_playing].to_list()
+#        self.sensor_info["absolute_position"] = self.sound_table.absolute_position[self.sensor_info.now_playing].to_list()
 
+        # New sound assignment method respects caliper and reduces repeats
+        # Does not preserve order but does preserve region
+        for i in self.sensor_info.index:
+            ss = self.sensor_info.sensor_size[i]
+            pos = self.sensor_info.sensor_position[i]
+            mycal = self.caliper
+            found = False
+            mysound = self.find_eligiable_sound(i, ax_sounds)
+            self.sensor_info.loc[i, "now_playing"] = mysound
+            self.sensor_info.loc[i, "position"] = self.sound_table.loc[mysound, "position"]
+            self.sound_table.loc[mysound, "assigned"] = True
 
         self.sensor_info["position"] = self.sound_table.position[self.sensor_info.now_playing].to_list()
         self.sensor_info["absolute_position"] = self.sound_table.absolute_position[self.sensor_info.now_playing].to_list()
 
         self.sound_table.loc[self.sensor_info.now_playing, "assigned"] = True
 
+    # Not using
     def select_swap_sound_regular(self):
         ax_sounds = self.active_sounds(self.min_pos, self.max_pos)
         n_elligiable = sum( self.sound_table.assigned[ax_sounds] == False) 
@@ -274,9 +295,33 @@ class Fantasmophone:
         sound_id_in = sound_id_in.to_list()[0]
         return sound_id_in
 
-    #def select_swap_sound_shift(self):
-        
 
+    def find_eligiable_sound(self, sensor_id, ax_sounds):
+        #ax_sounds = self.active_sounds(self.min_pos, self.max_pos)
+        ss = self.sensor_info.sensor_size[sensor_id]
+        pos = self.sensor_info.sensor_position[sensor_id]
+        mycal = self.caliper
+        found = False
+        print(f'Finding sound for sensor {sensor_id}\n')
+        while not found:
+            candidate_sounds = self.sound_table.loc[ax_sounds].query(f'sensor_size == {ss}').query(f'(( (position - {pos}) % 1) < {mycal}) or (( (position - {pos}) % 1) < {mycal})').query('assigned == False').index.to_list()
+            if len(candidate_sounds) > 0:
+                mysound = random.choice(candidate_sounds)
+                found = True
+            else:
+                print("No avaialable sounds, attempting to re-use\n")
+                candidate_sounds = self.sound_table.loc[ax_sounds].query(f'sensor_size == {ss}').query(f'(( (position - {pos}) % 1) < {mycal}) or (( (position - {pos}) % 1) < {mycal})').index.to_list()
+                if len(candidate_sounds) > 0:
+                    mysound = random.choice(candidate_sounds)
+                    found = True
+                else:
+                    print("No sounds available in region, looking outside of region\n")
+                    mycal += self.caliper
+        return mysound
+
+
+
+    # Not using
     def find_swap_mate_regular(self, sound_id_in, nbr_margin):
         # Get sound type (small/medium/large)
         new_size = self.sound_table.sensor_size[sound_id_in]
@@ -354,53 +399,61 @@ class Fantasmophone:
         old_max = (self.max_pos - shift_width) % self.nspiral
         if self.min_pos > old_min: # sensor ids with outdated sounds
             old_sens_id  = self.sensor_info.query(f'absolute_position >= {old_min} and absolute_position < {self.min_pos}').index.to_list()
-            non_old_sens_id = self.sensor_info.query(f'absolute_position < {old_min} or absolute_position > {self.min_pos}').index.to_list()
+            #non_old_sens_id = self.sensor_info.query(f'absolute_position < {old_min} or absolute_position > {self.min_pos}').index.to_list()
         else:
             old_sens_id  = self.sensor_info.query(f'absolute_position >= {old_min} or absolute_position < {self.min_pos}').index.to_list()
-            non_old_sens_id = self.sensor_info.query(f'absolute_position < {old_min} and absolute_position > {self.min_pos}').index.to_list()
+            #non_old_sens_id = self.sensor_info.query(f'absolute_position < {old_min} and absolute_position > {self.min_pos}').index.to_list()
+
+        #self.sensor_info["temp_sensor_pos"] = (self.sensor_info.sensor_position - old_min) % self.nspiral 
+        ax_sounds = self.active_sounds(self.min_pos, self.max_pos)
+        for i in old_sens_id:
+            mysound = self.find_eligiable_sound(i, ax_sounds)
+            self.swap_sounds([i], [mysound])
 
         # Need to figure out how to order the sensors with outmoded sounds
         # If nbr_margin = 1, sounds should always be in order within their size group
         # So if there are non-outmoded sensors between outmoded sensors then the outmoded group spans 0, otherwise it does not
         # Could be different for the different size groups so do this within the for loop
 
-        #self.sensor_info["temp_sensor_pos"] = (self.sensor_info.sensor_position - old_min) % self.nspiral 
 
-
-        for ss in [1, 2, 3]:
-            old_sens_pos = self.sensor_info.loc[old_sens_id].query(f'sensor_size == {ss}').sort_values("sensor_position").sensor_position.to_list()
-            print(f'There are {len(old_sens_pos)} sensors of size {ss} with outmoded sounds.\n')
-            if len(old_sens_pos) > 0:
-                non_old_sens_pos = self.sensor_info.loc[non_old_sens_id].query(f'sensor_size == {ss}').sort_values("sensor_position").sensor_position.to_list()
-                contig = all([ n > max(old_sens_pos) or n < min(old_sens_pos) for n in non_old_sens_pos])
-                if contig:
-                    old_sens_id_ss = self.sensor_info.loc[old_sens_id].query(f'sensor_size == {ss}').sort_values("sensor_position").index.to_list()
-                else:
-                    old_sens_id_ss = self.sensor_info.loc[old_sens_id].query(f'sensor_size == {ss} & sensor_position > {max(non_old_sens_pos)}').sort_values("sensor_position").index.to_list()
-                    old_sens_id_ss.extend(self.sensor_info.loc[old_sens_id].query(f'sensor_size == {ss} & sensor_position < {min(non_old_sens_pos)}').sort_values("sensor_position").index.to_list())
-
-                # largest position currently in sensor table
-                ss_mx = self.get_max_pos(old_min, old_max, ss)
-                new_sound_id = self.active_sounds(ss_mx, self.max_pos)
-                num_sounds_ss = sum(self.sound_table.sensor_size[new_sound_id]== ss)
-                print(f'There are {num_sounds_ss} sounds of size {ss} available.\n')
-                if num_sounds_ss == 0:
-                    next
-                repl = num_sounds_ss < len(old_sens_id_ss)
-                self.sound_table["temp_sound_pos"] = (self.sound_table.position - ss_mx) % self.nspiral
-                new_sound_id_ss = self.sound_table.loc[new_sound_id].query(f'sensor_size == {ss}').sample(n = len(old_sens_id_ss), replace = repl).sort_values("temp_sound_pos", ascending = True).index.to_list()
-                self.swap_sounds(old_sens_id_ss, new_sound_id_ss)
+        #for ss in [1, 2, 3]:
+        #    old_sens_pos = self.sensor_info.loc[old_sens_id].query(f'sensor_size == {ss}').sort_values("sensor_position").sensor_position.to_list()
+        #    print(f'There are {len(old_sens_pos)} sensors of size {ss} with outmoded sounds.\n')
+        #    if len(old_sens_pos) > 0:
+        #        non_old_sens_pos = self.sensor_info.loc[non_old_sens_id].query(f'sensor_size == {ss}').sort_values("sensor_position").sensor_position.to_list()
+        #        contig = all([ n > max(old_sens_pos) or n < min(old_sens_pos) for n in non_old_sens_pos])
+        #        if contig:
+        #            old_sens_id_ss = self.sensor_info.loc[old_sens_id].query(f'sensor_size == {ss}').sort_values("sensor_position").index.to_list()
+        #        else:
+        #            old_sens_id_ss = self.sensor_info.loc[old_sens_id].query(f'sensor_size == {ss} & sensor_position > {max(non_old_sens_pos)}').sort_values("sensor_position").index.to_list()
+        #            old_sens_id_ss.extend(self.sensor_info.loc[old_sens_id].query(f'sensor_size == {ss} & sensor_position < {min(non_old_sens_pos)}').sort_values("sensor_position").index.to_list())
+#
+#                # largest position currently in sensor table
+#                ss_mx = self.get_max_pos(old_min, old_max, ss)
+#                new_sound_id = self.active_sounds(ss_mx, self.max_pos)
+#                num_sounds_ss = sum(self.sound_table.sensor_size[new_sound_id]== ss)
+#                print(f'There are {num_sounds_ss} sounds of size {ss} available.\n')
+#                if num_sounds_ss == 0:
+#                    next
+#                repl = num_sounds_ss < len(old_sens_id_ss)
+#                self.sound_table["temp_sound_pos"] = (self.sound_table.position - ss_mx) % self.nspiral
+##                new_sound_id_ss = self.sound_table.loc[new_sound_id].query(f'sensor_size == {ss}').sample(n = len(old_sens_id_ss), replace = repl).sort_values("temp_sound_pos", ascending = True).index.to_list()
+#                self.swap_sounds(old_sens_id_ss, new_sound_id_ss)
 
         #self.sensor_info.drop("temp_sensor_pos", inplace = True, axis = 1)
-        self.sound_table.drop("temp_sound_pos", inplace = True, axis = 1)
+#        self.sound_table.drop("temp_sound_pos", inplace = True, axis = 1)
                 
         
 
     def update_sound_regular(self):
-        sound_id_in = self.select_swap_sound_regular()
-        if(sound_id_in >=0):
-            sens_id = self.find_swap_mate_regular(sound_id_in, nbr_margin = self.nbr_margin)
-            self.swap_sounds(sens_id, [sound_id_in])
+        mysens = random.choice(self.sensor_info.index.to_list())
+        ax_sounds = self.active_sounds(self.min_pos, self.max_pos)
+        mysound = self.find_eligiable_sound(mysens, ax_sounds)
+        self.swap_sounds([mysens], [mysound])
+        #sound_id_in = self.select_swap_sound_regular()
+        #if(sound_id_in >=0):
+        #    sens_id = self.find_swap_mate_regular(sound_id_in, nbr_margin = self.nbr_margin)
+        #    self.swap_sounds(sens_id, [sound_id_in])
 
     def run_update_sequence(self):
         wait_time = np.random.exponential(self.total_update_rate)
