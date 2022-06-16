@@ -32,7 +32,7 @@ const int LED_OFFSET = 0; // overall offset in 0..1
 const int LED_ORIENTATION = 1; // -1 to reverse
 // WORLD SETUP
 const int numSpots = NUM_BUTTONS;
-const int spotHalfWidth = 5;
+const int spotHalfWidth = 8;
 const float boundary = 0.01;
 const float luminanceMult = 20;
 
@@ -59,7 +59,6 @@ void printLine(T first, Types... other) {
     Serial.print(first);
     printLine(other...);
 }
-
 
 
 uint16_t curr_touched_1 = 0;
@@ -102,7 +101,9 @@ public:
     bool repeat_mode;
 
     bool active(float t);
+
     void move();
+
     float light(float t);
 };
 
@@ -150,8 +151,12 @@ float Spot::light(float t) {
 Spot spots[numSpots];
 int colors[6] = {0, 60, 100, 240, 300, 340};
 //float offsetBySpot[12] = {0, 1, 0, 1, 1, 0, -2, -3, -2, -2, -3, -1};
-float offsetBySpot[numSpots] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                0, 0, 0, 0, 0, 0, 0};
+//float offsetBySpot[numSpots] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+//                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+float offsetBySpot[numSpots] = {0.00, 0.02, 0.04, 0.06, 0.08, 0.10, 0.12, 0.15, 0.17, 0.19, 0.21, 0.23, 0.25, 0.27,
+                                0.29, 0.31, 0.33, 0.35, 0.38, 0.40, 0.42, 0.44, 0.46, 0.48, 0.50, 0.52, 0.54, 0.56,
+                                0.58, 0.60, 0.62, 0.65, 0.67, 0.69, 0.71, 0.73, 0.75, 0.77, 0.79, 0.81, 0.83, 0.85,
+                                0.88, 0.90, 0.92, 0.94, 0.96, 0.98};
 
 void setup() {
     Serial.begin(1000000);
@@ -201,20 +206,21 @@ void setup() {
     }
     Serial.println("MPR121 1 found!");
 
-//   if (!cap2.begin(0x5B)) {
-//     Serial.println("MPR121 2 not found, check wiring?");
-//     while (1); }
-//   Serial.println("MPR121 2 found!");
-//
-//   if (!cap3.begin(0x5C)) {
-//     Serial.println("MPR121 3 not found, check wiring?");
-//     while (1); }
-//   Serial.println("MPR121 3 found!");
-//
-//   if (!cap4.begin(0x5D)) {
-//     Serial.println("MPR121 4 not found, check wiring?");
-//     while (1); }
-//   Serial.println("MPR121 4 found!");
+    // comment these three chunks below for single-sensor board mode
+   if (!cap2.begin(0x5B)) {
+     Serial.println("MPR121 2 not found, check wiring?");
+     while (1); }
+   Serial.println("MPR121 2 found!");
+
+   if (!cap3.begin(0x5C)) {
+     Serial.println("MPR121 3 not found, check wiring?");
+     while (1); }
+   Serial.println("MPR121 3 found!");
+
+   if (!cap4.begin(0x5D)) {
+     Serial.println("MPR121 4 not found, check wiring?");
+     while (1); }
+   Serial.println("MPR121 4 found!");
 
 
 //   cap1.setThresholds(cap_thresh_0, cap_thresh_1);
@@ -227,7 +233,7 @@ void setup() {
     // Setup display spots
     int centerColor = random(360);
     for (int i = 0; i < numSpots; i++) {
-        spots[i].location = float(i) / numSpots;
+        spots[i].location = 0; //float(i) / numSpots;
         spots[i].velocity = 0.0;
         spots[i].acceleration = 0.0;
         spots[i].t_decay = float(random(400, 2000)) / 1000;
@@ -258,9 +264,10 @@ void loop() {
 
     // update the sensor values and latch them
     curr_touched_1 = cap1.touched();
-//   curr_touched_2 = cap2.touched();
-//   curr_touched_3 = cap3.touched();
-//   curr_touched_4 = cap4.touched();
+    // comment these three below for single-sensor board mode
+    curr_touched_2 = cap2.touched();
+    curr_touched_3 = cap3.touched();
+    curr_touched_4 = cap4.touched();
 
 
     // Read sensor values into array
@@ -346,13 +353,13 @@ void loop() {
                 uint8_t now_playing_byte = 0;
 
                 bool now_playing = 0;
-                for(uint8_t byt = 0; byt < 6; byt++) {
-                    for(uint8_t bit = 0; bit < 8; bit++) {
+                for (uint8_t byt = 0; byt < 6; byt++) {
+                    for (uint8_t bit = 0; bit < 8; bit++) {
                         bi = byt * 8 + bit;
                         now_playing = buf_rx[byt + 2] & (1 << bit);
 
                         // if spot was in repeat mode, but now is not playing, let it decay from here
-                        if(!now_playing & spots[bi].repeat_mode) {
+                        if (!now_playing & spots[bi].repeat_mode) {
                             spots[bi].t_start = t;
                             printLine("turning off repeat sound on ", bi);
                         }
@@ -405,7 +412,7 @@ void drawSpots(float t) {
         }
 
         float center = (spots[i].location + LED_OFFSET + offsetBySpot[i]);
-        if(LED_ORIENTATION < 0) {
+        if (LED_ORIENTATION < 0) {
             center = 1 - center;
         }
         center *= NUM_LEDS;
