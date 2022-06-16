@@ -14,12 +14,12 @@
 #define  NUM_BUTTONS  48
 #define ENABLE_FRAME_SLEEP  0
 #define SLEEP_COUNT 3 // how many times to retry before sleep
-#define LOOP_DELAY 300 // T frame rate
+#define LOOP_DELAY 30 // T frame rate
 #define RX_WAIT_TIMEOUT 20
 #define RF_RETRY_STEP_COUNT  300
 #define NUM_CHANNELS 8
 #define CHANNEL_OFFSET 0
-#define NUM_SOUNDS 24
+#define NUM_SOUNDS 125
 #define GAIN_ALL -20
 //const int channel_gain[8] = {0, 0, 0, 30, -20, -20, -50, -50};
 const int channel_gain[8] = {0,0,0,0,0,0,0,0};
@@ -155,7 +155,7 @@ void setup() {
     Serial.println("audio test");
     for (int ci = 0; ci < NUM_CHANNELS; ci++) {
         playSound(ci + 10, ci);
-        delay(100);
+        delay(500);
     }
 
     // setup random sounds on the buttons for fail-fun feature
@@ -183,13 +183,13 @@ void loop() {
     while (Serial.available() > 0) {
         serial_rx = Serial.read();
         // play a sound
-        if (serial_rx == 'P') {
-            sound_id = Serial.parseInt();
-            Serial.read(); // skip separater
-            channel_id = Serial.parseInt();
-            trackPlayPoly(sound_id, channel_id, 1);
-//      printLine("ack play ", sound_id, " on ", channel_id);
-        }
+//        if (serial_rx == 'P') {
+//            sound_id = Serial.parseInt();
+//            Serial.read(); // skip separater
+//            channel_id = Serial.parseInt();
+//            trackPlayPoly(sound_id, channel_id, 1);
+////      printLine("ack play ", sound_id, " on ", channel_id);
+//        }
 
         // update button sound values
         if (serial_rx == 'V') {
@@ -209,22 +209,22 @@ void loop() {
         }
 
         // update LED values
-        if (serial_rx == 'L') {
-//      Serial.read();
-//      led_count = Serial.parseInt();
-//      Serial.read();
-
-            Serial.print("got LEDs ");
-//      Serial.print(led_count);
-            Serial.print(":");
-//      int input
-//      for (int si = 0; si <  NUM_BUTTONS; si++) {
-//        input = Serial.parseInt() + Serial.parseInt(;
-//        Serial.print(led_data[si]);
-//        Serial.print(' ');
-//      }
-            Serial.println();
-        }
+//        if (serial_rx == 'L') {
+////      Serial.read();
+////      led_count = Serial.parseInt();
+////      Serial.read();
+//
+//            Serial.print("got LEDs ");
+////      Serial.print(led_count);
+//            Serial.print(":");
+////      int input
+////      for (int si = 0; si <  NUM_BUTTONS; si++) {
+////        input = Serial.parseInt() + Serial.parseInt(;
+////        Serial.print(led_data[si]);
+////        Serial.print(' ');
+////      }
+//            Serial.println();
+//        }
     }
 
 
