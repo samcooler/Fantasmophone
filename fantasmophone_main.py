@@ -35,10 +35,10 @@ class Fantasmophone:
 
     rssi_by_frame = [0] * num_frames
 
-    sound_table_file = "test_sounds.csv"
-    nspiral = 2
-    sensor_info_file = "test_sensors.csv"
-    small_length_cutoff = 4 # sounds longer than this go to medium sensors
+    sound_table_file = "fan_sounds.csv"
+    nspiral = 1
+    sensor_info_file = "fan_sensors.csv"
+    small_length_cutoff = 2.5 # sounds longer than this go to medium sensors
     nbr_margin = 1
 
     # Expected number of minutes between switches
@@ -48,7 +48,7 @@ class Fantasmophone:
     reg_update_per_minute = 10 # Expected number of non-rotation updates per minute
     #update_rate = 1.0/reg_update_per_minute
     # For running later, set reg_update_per_minute to something like 0.1, one update every six minutes
-    rotation_per_minute = 5
+    rotation_per_minute = 0
     #rotate_rate = 1.0/rotation_per_minute
     minutes_per_full_rotation = 5
     if rotation_per_minute  > 0:
@@ -59,7 +59,7 @@ class Fantasmophone:
     protate = rotation_per_minute*total_update_rate
 
 
-    caliper = 0.1
+    caliper = 0.15
     # Caliper controls how far away a sound can be in order to be assigned to a node
 
     # Out of how many cycles will we switch a sound
@@ -303,20 +303,26 @@ class Fantasmophone:
         mycal = self.caliper
         found = False
         print(f'Finding sound for sensor {sensor_id}\n')
-        while not found:
+        while ((not found) and (mycal < 0.6)):
             candidate_sounds = self.sound_table.loc[ax_sounds].query(f'sensor_size == {ss}').query(f'(( (position - {pos}) % 1) < {mycal}) or (( (position - {pos}) % 1) < {mycal})').query('assigned == False').index.to_list()
             if len(candidate_sounds) > 0:
                 mysound = random.choice(candidate_sounds)
                 found = True
             else:
-                print("No avaialable sounds, attempting to re-use\n")
-                candidate_sounds = self.sound_table.loc[ax_sounds].query(f'sensor_size == {ss}').query(f'(( (position - {pos}) % 1) < {mycal}) or (( (position - {pos}) % 1) < {mycal})').index.to_list()
-                if len(candidate_sounds) > 0:
-                    mysound = random.choice(candidate_sounds)
-                    found = True
-                else:
-                    print("No sounds available in region, looking outside of region\n")
-                    mycal += self.caliper
+                print("No sounds available in region, looking outside of region\n")
+                mycal += self.caliper
+
+        mycal = self.caliper
+        while not found:
+            print("No avaialable sounds, attempting to re-use\n")
+            candidate_sounds = self.sound_table.loc[ax_sounds].query(f'sensor_size == {ss}').query(f'(( (position - {pos}) % 1) < {mycal}) or (( (position - {pos}) % 1) < {mycal})').index.to_list()
+            if len(candidate_sounds) > 0:
+                mysound = random.choice(candidate_sounds)
+                found = True
+            else:
+                print("No sounds available in region, looking outside of region\n")
+                mycal += self.caliper
+
         return mysound
 
 
@@ -480,7 +486,7 @@ def setup():
 
     #fan.randomize_sounds()
     fan.tx_button_sound_values()
-    fan.tx_led_values()
+    #fan.tx_led_values()
 
 def loop():
     # if loop_index % 100 == 0:
@@ -538,5 +544,5 @@ if __name__ == '__main__':
         #time.sleep(1 / 10000)
         fan.run_update_sequence()
         fan.tx_button_sound_values()
-        fan.tx_led_values()
+        #fan.tx_led_values()
 

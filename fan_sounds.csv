@@ -1,0 +1,125 @@
+Sound,length_seconds,position,gain,channel,file,sound_id,loop
+Big Cheer Sport,4,1,0,1,001_applause2_short.wav,1,FALSE
+Heatbeat,25,1.5,0,2,002_heartbeat1_loop.wav,2,TRUE
+Applause Reverb no voices,11,2,0,3,003_applause3_short.wav,3,FALSE
+Heartbeat,16,2.5,0,4,004_heartbeat2_loop.wav,4,TRUE
+Applause with Laughter and a hoot,12,4,0,5,005_applause4_short.wav,5,FALSE
+Clap and Cheer,12,4,0,6,006_clap_cheer1_short.wav,6,FALSE
+Clap and Laugh,13,4,0,1,007_applause1_short.wav,7,FALSE
+Laughter then applause supportive,17,4,0,2,008_applause5_short.wav,8,FALSE
+Crinkle,2,4.5,0,3,009_crinkle1_short.wav,9,FALSE
+Tennis,1,5,0,4,010_tennis_onehit_short.wav,10,FALSE
+Basketball Thump,4,5,0,5,011_basketball_dribble_short.wav,11,FALSE
+Footrace,65,5,0,6,012_footrace1_loop.wav,12,TRUE
+Footsteps on Gravel,34,6,0,1,013_footsteps_gravel_loop.wav,13,TRUE
+Bloop,0.3,7,0,2,014_xty_onebloop_short.wav,14,FALSE
+Heartbeat baby,26,7.5,0,3,015_heartbeat3_baby_loop.wav,15,TRUE
+Bloops,2,8,0,4,016_xty_fourbloop_short.wav,16,FALSE
+Basketball on Rim,2,10,0,5,017_basketball_short.wav,17,FALSE
+Dropped can,0.5,11,0,6,018_dropped_can_short.wav,18,FALSE
+Footrace,9,11,0,1,019_footrace2_short.wav,19,FALSE
+Footsteps on Leaves,25,12,0,2,020_footsteps_leaves_short.wav,20,FALSE
+Ping pong balls,1,13.5,0,3,021_ping_pong_balls_short.wav,21,FALSE
+Tennis balls in tube,1,13.5,0,4,022_tennis_balls_short.wav,22,FALSE
+Weaving machine,9,13.5,0,5,023_weaving_machine_loop.wav,23,TRUE
+Woodpecker tap,2,14,0,6,024_pileated_woodpecker_tap_short.wav,24,FALSE
+Clock,8,14.5,0,1,025_clock1_loop.wav,25,TRUE
+Tennis,5,15,0,2,026_tennis_fourhits_short.wav,26,FALSE
+Metal Tool,2,15.5,NA,3,027_metal_tool_short.wav,27,FALSE
+Footsteps on Gravel,7,16,0,4,028_footsteps_gravel2_short.wav,28,FALSE
+Pneumatic thunk,2,17,0,5,029_pneumatic_thunk_short.wav,29,FALSE
+Tree,28,17.5,0,6,030_tree2_loop.wav,30,TRUE
+Glass Break,1,18,0,1,031_glass_break1_short.wav,31,FALSE
+Wood thunk,2,19,0,2,032_wood_thunk_reverb_short.wav,32,FALSE
+Copy machine,22,19,0,3,033_copy_machine_loop.wav,33,TRUE
+Crusshed can,1,20,0,4,034_dropped_can2_short.wav,34,FALSE
+Tree creak remixed,3,20.5,0,5,035_tree_remixed2_short.wav,35,FALSE
+Hit can,1,21,0,6,036_hit_can_short.wav,36,FALSE
+Bike,15,21.5,0,1,037_bike_spin_loop.wav,37,TRUE
+Typewriter Typing,2,22,0,2,038_typewriter_clacks_short.wav,38,FALSE
+Hit and Miss Engine,25,23,0,3,039_hit_and_miss_engine_short.wav,39,FALSE
+Hydrophone,2,23.5,0,4,040_hydrophone1_short.wav,40,FALSE
+Typewriter Bell,2,24,0,5,041_typewriter_bellreturn_short.wav,41,FALSE
+Cat purr,26,24,0,6,042_ursapurr_loop.wav,42,TRUE
+Truck Horn,3,25,0,1,043_truck_horn_short.wav,43,FALSE
+Hydrophone Dry and Rumbly,25,25.5,0,2,044_hydrophone3_loop.wav,44,TRUE
+Hang Drum single hit,2,26,0,3,045_hang_drum_A4.wav,45,FALSE
+Hang Drum single hit,2,26,0,4,046_hang_drum_B3.wav,46,FALSE
+Hang Drum single hit,2,26,0,5,047_hang_drum_B4.wav,47,FALSE
+Hang Drum single hit,2,26,0,6,048_hang_drum_Csharp3.wav,48,FALSE
+Hang Drum single hit,2,26,0,1,049_hang_drum_Csharp4.wav,49,FALSE
+Hang Drum single hit,2,26,0,2,050_hang_drum_Csharp5.wav,50,FALSE
+Hang Drum single hit,2,26,0,3,051_hang_drum_Dsharp4.wav,51,FALSE
+Hang Drum single hit,2,26,0,4,052_hang_drum_E3.wav,52,FALSE
+Hang Drum single hit,2,26,0,5,053_hang_drum_E4.wav,53,FALSE
+Hang Drum single hit,2,26,0,6,054_hang_drum_Fsharp4.wav,54,FALSE
+Hang Drum single hit,2,26,0,1,055_hang_drum_Gsharp3.wav,55,FALSE
+Didgeridoo,4,26.5,0,2,056_didgeridoo_short.wav,56,FALSE
+Hydrophone,15,26.5,0,3,057_hydrophone2_loop.wav,57,TRUE
+Music Box,2,27,0,4,058_musicbox1_short.wav,58,FALSE
+Music Box,2,27,0,5,059_musicbox2_short.wav,59,FALSE
+Rain on Roof,100,27.5,0,6,060_rain_on_roof_loop.wav,60,TRUE
+Doorbell1,4,28,0,1,061_doorbell1_C#4_short.wav,61,FALSE
+Doorbell1,5,28,0,2,062_doorbell1_F#5_short.wav,62,FALSE
+Doorbell1,6,28,0,3,063_doorbell1_G#2_short.wav,63,FALSE
+Doorbell1,7,28,0,4,064_doorbell1_D#3_short.wav,64,FALSE
+Doorbell1,8,28,0,5,065_doorbell1_B4_short.wav,65,FALSE
+Pocket watch,8,28.5,0,6,066_pocketwatch_loop.wav,66,TRUE
+Doorbell2,2,29,0,1,067_doorbell2_D#5_short.wav,67,FALSE
+Doorbell2,2,29,0,2,068_doorbell2_B5_short.wav,68,FALSE
+Doorbell2,2,29,0,3,069_doorbell2_F#3_short.wav,69,FALSE
+Medium bell,7,30,0,4,070_medium_bell_Dsharp4.wav,70,FALSE
+Medium Bell,7,30,0,5,071_medium_bell_Fsharp4.wav,71,FALSE
+Didgeridoo,22,30.5,0,6,072_didgeridoo_loop.wav,72,TRUE
+Train blast,1.5,32,0,1,073_train_blast2_short.wav,73,FALSE
+Train blast,2,32,0,2,074_train_blast1_short.wav,74,FALSE
+Steam train,3,33,0,3,075_train_blast4_short.wav,75,FALSE
+Steam train,4,33,0,4,076_train_blast5_short.wav,76,FALSE
+Train,22,33.5,0,5,077_cta1_loop.wav,77,TRUE
+Train blast,6,34,0,6,078_train_blast3_short.wav,78,FALSE
+Steam train,9,34,0,1,079_train_blast6_short.wav,79,FALSE
+Cruise ship,7,35,0,2,080_cruise_ship3_B_major1st_short.wav,80,FALSE
+Cruise ship,7,35,0,3,081_cruise_ship3_Dsharp_major3rd_short.wav,81,FALSE
+Cruise ship,7,35,0,4,082_cruise_ship3_Fsharp_major5th_short.wav,82,FALSE
+Cat Meow,1,37,0,5,083_cat_meow1_short.wav,83,FALSE
+Cat Meow,1,37,0,6,084_cat_meow2_short.wav,84,FALSE
+Cat Meow,1,37,0,1,085_cat_meow3_short.wav,85,FALSE
+Cat purr,2,37.5,0,2,086_ursapurr1_short.wav,86,FALSE
+Guinea Pigs,6,38,0,3,087_guinea_pigs1_short.wav,87,FALSE
+bees,17,38.5,0,4,088_bees_17second_loop.wav,88,TRUE
+Dolphin,1,39,0,5,089_dolphin4_short.wav,89,FALSE
+Dolphin,1,39,0,6,090_dolphin5_short.wav,90,FALSE
+Dolphin,4,39,0,1,091_dolphin_short.wav,91,FALSE
+Dolphin,5,39,0,2,092_dolphin2_short.wav,92,FALSE
+Dolphin,5,39,0,3,093_dolphin3_short.wav,93,FALSE
+humpback whale,6,40,0,4,094_humpback1_short.wav,94,FALSE
+humpback whale,16,40,0,5,095_humpback2_short.wav,95,FALSE
+Dawn Chorus Borneo,110,40.5,0,6,096_borneo_dawn_chorus_loop.wav,96,TRUE
+Gibbon,2,41,0,1,097_gibbon1_short.wav,97,FALSE
+Gibbon,2,41,0,2,098_gibbon2_short.wav,98,FALSE
+Stream and Birds,797,41.5,0,3,099_stream_and_birds_loop.wav,99,TRUE
+howler monkey,6,42,0,4,100_howler2_short.wav,100,FALSE
+howler monkey,7,42,0,5,101_howler1_short.wav,101,FALSE
+Trumpet,2,43,0,6,102_trumpet2_short.wav,102,FALSE
+Trumpet,4,43,0,1,103_trumpet_short.wav,103,FALSE
+Trumpet,5,43,0,2,104_trumpet3_short.wav,104,FALSE
+summer night,18,43.5,0,3,105_summer_night_20second_loop.wav,105,TRUE
+Cow,2,44,0,4,106_cow1_short.wav,106,FALSE
+Goats,3,44.5,0,5,107_goats1_short.wav,107,FALSE
+seagull single,1,45,0,6,108_seagull1_short.wav,108,FALSE
+seagull single,1,45,0,1,109_seagull2_short.wav,109,FALSE
+Ocean,151,45,0,2,110_ocean_loop.wav,110,TRUE
+Common Loon,6,45.5,0,3,111_common_loon_short.wav,111,FALSE
+Wood thrush,6,45.5,0,4,112_wood_thrush_short.wav,112,FALSE
+Dark Eyed Junco,12,45.5,0,5,113_dark_eyed_junco_short.wav,113,FALSE
+Norther Mocking Bird,14,45.5,0,6,114_norther_mocking_bird_short.wav,114,FALSE
+Hermit Thrush,2,46,0,1,115_hermit_thrush1_short.wav,115,FALSE
+Hermit Thrush,2,46,0,2,116_hermit_thrush2_short.wav,116,FALSE
+Hermit Thrush,2,46,0,3,117_hermit_thrush3_short.wav,117,FALSE
+Hermit Thrush,2,46,0,4,118_hermit_thrush4_short.wav,118,FALSE
+Canoe paddle,41,46.5,0,5,119_kayak_loop.wav,119,TRUE
+Bird,3,47,0,6,120_gnbird1_short.wav,120,FALSE
+Mourning Dove,4,47,0,1,121_mourning_dove_short.wav,121,FALSE
+Crows,9,47,0,2,122_crows1_short.wav,122,FALSE
+Rolling Thunder,5,48,0,3,123_thunder1_short.wav,123,FALSE
+Thunder,6,48,0,4,124_thunder2_short.wav,124,FALSE
