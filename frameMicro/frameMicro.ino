@@ -27,16 +27,14 @@ uint8_t buf_rx[RH_RF69_MAX_MESSAGE_LEN];
 // LED SETUP
 
 #define NUM_BUTTONS   48
-const int NUM_LEDS = 60*4; //144 * 4;
-const int LED_OFFSET = 0;
+const int NUM_LEDS = 144 * 4;
+const int LED_OFFSET = 0; // overall offset in 0..1
+const int LED_ORIENTATION = 1; // -1 to reverse
 // WORLD SETUP
 const int numSpots = NUM_BUTTONS;
-const int spotHalfWidth = 2;
+const int spotHalfWidth = 5;
 const float boundary = 0.01;
 const float luminanceMult = 20;
-const int cap_thresh_0 = 12;
-const int cap_thresh_1 = 6;
-//const float TOUCH_DELAY_TIME_S = 0.1;
 
 
 #define DATAPIN    A4
@@ -118,7 +116,7 @@ Spot::Spot() {
     t_start = -1;
     period = .2;
     t_decay = .2;
-    repeat_mode = 1;
+    repeat_mode = 0;
     phase_start = 0.1;
 }
 
@@ -245,10 +243,11 @@ void setup() {
     //  leds.setBrightness(50);
     //  leds.show();
     //  delay(1000);
-    for (int i = 0; i < NUM_LEDS; i++) {
-        leds.setPixelColor(i, 120, 20, 0);
-    }
-    leds.setBrightness(50);
+//    for (int i = 0; i < NUM_LEDS; i++) {
+//        leds.setPixelColor(i, 120, 20, 0);
+//    }
+    leds.setBrightness(30);
+    leds.clear();
     leds.show();
     Serial.println("done with setup. Starting rx loop");
 }
@@ -405,7 +404,11 @@ void drawSpots(float t) {
             continue;
         }
 
-        float center = spots[i].location * NUM_LEDS + LED_OFFSET + offsetBySpot[i];
+        float center = (spots[i].location + LED_OFFSET + offsetBySpot[i]);
+        if(LED_ORIENTATION < 0) {
+            center = 1 - center;
+        }
+        center *= NUM_LEDS;
         int ledLocation = round(center);
         int colorOffset = 0;
         float luminance;
