@@ -25,7 +25,7 @@ Weaving machine,9,13.5,0,5,023_weaving_machine_loop.wav,23,TRUE
 Woodpecker tap,2,14,0,6,024_pileated_woodpecker_tap_short.wav,24,FALSE
 Clock,8,14.5,0,1,025_clock1_loop.wav,25,TRUE
 Tennis,5,15,0,2,026_tennis_fourhits_short.wav,26,FALSE
-Metal Tool,2,15.5,NA,3,027_metal_tool_short.wav,27,FALSE
+Metal Tool,2,15.5,0,3,027_metal_tool_short.wav,27,FALSE
 Footsteps on Gravel,7,16,0,4,028_footsteps_gravel2_short.wav,28,FALSE
 Pneumatic thunk,2,17,0,5,029_pneumatic_thunk_short.wav,29,FALSE
 Tree,28,17.5,0,6,030_tree2_loop.wav,30,TRUE
@@ -123,3 +123,4 @@ Mourning Dove,4,47,0,1,121_mourning_dove_short.wav,121,FALSE
 Crows,9,47,0,2,122_crows1_short.wav,122,FALSE
 Rolling Thunder,5,48,0,3,123_thunder1_short.wav,123,FALSE
 Thunder,6,48,0,4,124_thunder2_short.wav,124,FALSE
+Car Start,2,5.5,0,5,125_car_start1_short.wav,125,FALSE
