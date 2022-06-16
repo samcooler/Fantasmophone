@@ -200,7 +200,7 @@ class Fantasmophone:
         channels = self.sound_table.loc[sounds, "channel"].to_list()
         loop = self.sound_table.loc[sounds, "loop"].to_list()
         gain = self.sound_table.loc[sounds, "gain"].to_list()
-        out = f'V{"-".join([f"{s},{c},{r*1},{int(g)}" for s, c, r, g in zip(sounds, channels, loop, gain)])}'
+        out = f'V{"-".join([f"{int(s)},{int(c)},{r*1},{int(g)}" for s, c, r, g in zip(sounds, channels, loop, gain)])}'
         print(f'writing sound values:\n{out}')
         if self.serial is not None:
             self.serial.write(out.encode('utf-8'))
