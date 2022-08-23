@@ -56,6 +56,8 @@ int sound_id = 0;
 int channel_id = 0;
 int request_mode = 0;
 int led_frame = 1;
+
+// leds are currently managed on the frame not on the base
 uint8_t led_data[NUM_BUTTONS] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
@@ -115,6 +117,7 @@ void stopLongSounds(uint8_t bi){
     float t = float(millis()) / 1000;
     if(t > sound_started[bi] + 60){
         trackStop(now_playing_map[bi]);
+        now_playing_map[bi] = 0;
     }
 }
 
