@@ -37,6 +37,15 @@ const float boundary = 0.01;
 const float luminanceMult = 80;
 
 
+//Play alone setup
+float last_touch = 0;
+float WAIT_ALONE = 5*60;
+float SELF_PLAY_RATE = 3; // average touches per minute
+float lam = SELF_PLAY_RATE/60; // touches per second
+float t_old = 0;
+
+
+
 #define DATAPIN    A4
 #define CLOCKPIN   A5
 Adafruit_DotStar leds(NUM_LEDS, DATAPIN, CLOCKPIN, DOTSTAR_BRG);
@@ -162,6 +171,8 @@ float offsetBySpot[numSpots] = {0.74, 0.72, 0.70, 0.66, 0.64, 0.59, 0.55, 0.68, 
                                 0.47, 0.45, 0.41, 0.38, 0.36, 0.34, 0.32, 0.30, 0.28, 0.26, 0.99, 0.95, 0.93, 0.91,
                                 0.89, 0.86, 0.84, 0.82, 0.80, 0.78, 0.76, 0.22, 0.24, 0.20, 0.18, 0.16, 0.14, 0.11,
                                 0.09, 0.07, 0.05, 0.03, 0.01};
+
+
 void setup() {
     Serial.begin(1000000);
 
@@ -262,6 +273,7 @@ void setup() {
     Serial.println("done with setup. Starting rx loop");
 }
 
+
 void loop() {
 //   delay(1);
     float t = float(millis()) / 1000;
@@ -281,15 +293,31 @@ void loop() {
     for (uint8_t i = 0; i < 12; i++) {
         if (curr_touched_1 & _BV(i)) {
             touched_now[i + 0] = true;
+            last_touch = t;
         }
         if (curr_touched_2 & _BV(i)) {
             touched_now[i + 12] = true;
+            last_touch = t;
         }
         if (curr_touched_3 & _BV(i)) {
             touched_now[i + 24] = true;
+            last_touch = t;
         }
         if (curr_touched_4 & _BV(i)) {
             touched_now[i + 36] = true;
+            last_touch = t;
+        }
+    }
+    float time_since_touch = t-last_touch;
+    if(time_since_touch > WAIT_ALONE){
+        // play alone
+        float loop_time = t - t_old; // how long since last loop
+        float touch_prob = loop_time*lam;
+        for (int bi = 0; bi < NUM_BUTTONS; bi++) {
+            float x = random(0, 1);
+            if(x < touch_prob){
+                touched_now[bi] = true;
+            }
         }
     }
 
@@ -406,6 +434,7 @@ void loop() {
             touched_since_reset_4 = 0;
         }
     }
+    t_old = t; 
 }
 
 void drawSpots(float t) {
