@@ -14,13 +14,13 @@
 #define  NUM_BUTTONS  48
 #define ENABLE_FRAME_SLEEP  0
 #define SLEEP_COUNT 3 // how many times to retry before sleep
-#define LOOP_DELAY 30 // T frame rate
+#define LOOP_DELAY 20 // T frame rate
 #define RX_WAIT_TIMEOUT 20
 #define RF_RETRY_STEP_COUNT  300
 #define NUM_CHANNELS 8
 #define CHANNEL_OFFSET 0
 #define NUM_SOUNDS 125
-#define GAIN_ALL -20
+#define GAIN_ALL 0
 //const int channel_gain[8] = {0, 0, 0, 30, -20, -20, -50, -50};
 const int channel_gain[8] = {0,0,0,0,0,0,0,0};
 
@@ -67,13 +67,17 @@ bool touched_last[NUM_BUTTONS] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 uint8_t sound_map[NUM_BUTTONS] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
                                    24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44,
                                    45, 46, 47, 48};
-uint8_t channel_map[NUM_BUTTONS] = {0, 1, 2, 3, 4, 5, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1,
-                                    0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1};
-bool repeat_map[NUM_BUTTONS] = {1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+uint8_t channel_map[NUM_BUTTONS] = {0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3,
+                                    4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7};
+bool repeat_map[NUM_BUTTONS] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 uint8_t gain_map[NUM_BUTTONS] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 uint8_t now_playing_map[NUM_BUTTONS] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+bool play_started[NUM_BUTTONS] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+float sound_started[NUM_BUTTONS] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 //uint8_t now_playing_bytes[6] = {0,0,0,0,0,0};
 
@@ -87,6 +91,7 @@ void playSound(uint16_t sound, int channel) {
 }
 
 void playSoundButton(uint8_t bi) {
+    float t = float(millis()) / 1000;
     if (repeat_map[bi]) {
         if (now_playing_map[bi] > 0) {
             // stop playing sound
@@ -96,11 +101,20 @@ void playSoundButton(uint8_t bi) {
 //            trackLoop(sound_map[bi], 1);
             playSound(sound_map[bi], channel_map[bi]);
             now_playing_map[bi] = sound_map[bi];
+            sound_started[bi] = t;      
         }
     } else {
 //        trackLoop(sound_map[bi], 0); // shouldn't need this unless we change sound repeat type
         playSound(sound_map[bi], channel_map[bi]);
 //        now_playing_map[bi] = sound_map[bi];
+        sound_started[bi] = t;      
+    }
+}
+
+void stopLongSounds(uint8_t bi){
+    float t = float(millis()) / 1000;
+    if(t > sound_started[bi] + 60){
+        trackStop(now_playing_map[bi]);
     }
 }
 
@@ -153,20 +167,22 @@ void setup() {
     }
 
     Serial.println("audio test");
+    int test_sounds[] = {126, 127, 128, 129, 130, 131, 132, 133};
     for (int ci = 0; ci < NUM_CHANNELS; ci++) {
-        playSound(ci + 10, ci);
+        playSound(test_sounds[ci], ci);
         delay(500);
     }
 
     // setup random sounds on the buttons for fail-fun feature
-//    Serial.print("Random sound map is ");
-//    for (int bi = 0; bi < NUM_BUTTONS; bi++) {
-//        sound_map[bi] = random(NUM_SOUNDS) + 1;
-//        channel_map[bi] = random(NUM_CHANNELS);
-//        Serial.print(sound_map[bi]);
-//        Serial.print(" ");
-//    }
-//    Serial.println();
+    randomSeed(analogRead(0));
+    Serial.print("Random sound map is ");
+    for (int bi = 0; bi < NUM_BUTTONS; bi++) {
+        sound_map[bi] = random(NUM_SOUNDS) + 1;
+        channel_map[bi] = random(NUM_CHANNELS);
+        Serial.print(sound_map[bi]);
+        Serial.print(" ");
+    }
+    Serial.println();
 
     setSoundParameters();
 }
@@ -175,7 +191,8 @@ void loop() {
 
 //    return;
     delay(LOOP_DELAY);
-
+    float t = float(millis()) / 1000;
+    
     led_frame = 0;
 //    for (int i = 0; i < NUM_BUTTONS; i++) led_data[i] = 0;
 
@@ -188,7 +205,7 @@ void loop() {
 //            Serial.read(); // skip separater
 //            channel_id = Serial.parseInt();
 //            trackPlayPoly(sound_id, channel_id, 1);
-////      printLine("ack play ", sound_id, " on ", channel_id);
+////      printLine("track play ", sound_id, " on ", channel_id);
 //        }
 
         // update button sound values
@@ -252,7 +269,7 @@ void loop() {
             }
         }
 
-        sprintf(buf_tx, " Sxxxxxxxxxxx");
+        sprintf(buf_tx, " Sxxxxxx");
         buf_tx[0] = frameIndex;
 
         uint8_t bi = 0;
@@ -277,6 +294,7 @@ void loop() {
 
         // Send a trigger message to the frame
         //    rf69_manager.sendtoWait((uint8_t *)buf_tx, strlen(buf_tx), frameIndex);
+        //rf69.send((uint8_t *) buf_tx, strlen(buf_tx));  // strlen(buf_tx)
         rf69.send((uint8_t *) buf_tx, 8);  // strlen(buf_tx)
         //    Serial.print("tx");
         //    Serial.println(radioPacket);
@@ -299,15 +317,37 @@ void loop() {
                     touched_now[bi] = 0;
                 }
                 // load presses from radio packet
-                for (uint8_t buf_i = 0; buf_i < 8; buf_i++) {
-                    for (uint8_t i = 0; i < 12; i++) {
-                        if (buf_rx[buf_i + 1] & _BV(i)) {
-                            touched_now[i + buf_i * 8] = true;
+                //for (uint8_t buf_i = 0; buf_i < 8; buf_i++) {
+                 //   for (uint8_t i = 0; i < 12; i++) {
+                //        if (buf_rx[buf_i + 1] & _BV(i)) {
+                //            touched_now[i + buf_i * 8] = true;
+                //        }
+                //    }
+                //}
+                uint8_t input = 0;
+                uint8_t bit_offset = 0;
+                uint8_t button_i = 0; // 0 to 47
+                for(uint8_t board_i = 0; board_i < 4; board_i ++){
+                    //read
+                    for(uint8_t sensor_i = 0; sensor_i < 12; sensor_i ++){
+                        if(sensor_i < 8){ // first byte has our first 8 sensors
+                            input = buf_rx[board_i*2 + 1];
+                            bit_offset = 0;
+                        }else{ // second byte has last four sensors
+                            input = buf_rx[board_i*2 + 2];
+                            bit_offset = -8; 
+                        }
+                        if(input & (1 << (sensor_i+ bit_offset))){
+                            button_i = board_i*12 + sensor_i;
+                            touched_now[button_i] = 1;
                         }
                     }
                 }
+
+
                 // check for newly pressed buttons and trigger sound, then save state for next round
                 for (uint8_t bi = 0; bi < NUM_BUTTONS; bi++) {
+                    stopLongSounds(bi);
                     if (touched_now[bi] & ~touched_last[bi]) {
                         printLine("new press on ", bi);
                         playSoundButton(bi);

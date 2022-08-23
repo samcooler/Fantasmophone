@@ -27,7 +27,8 @@ from math import log10
 
 class Fantasmophone:
     serial = None
-    serial_port = '/dev/tty.usbmodem*'
+    # serial_port = '/dev/tty.usbmodem*'
+    serial_port = '/dev/serial/by-id/usb-A*'
 
     num_frames = 1
     num_sensors_by_frame = (48, 12, 12)
@@ -35,9 +36,9 @@ class Fantasmophone:
 
     rssi_by_frame = [0] * num_frames
 
-    sound_table_file = "fan_sounds.csv"
+    sound_table_file = "/home/pi/Fantasmophone/fan_sounds.csv"
     nspiral = 1
-    sensor_info_file = "fan_sensors.csv"
+    sensor_info_file = "/home/pi/Fantasmophone/fan_sensors.csv"
     small_length_cutoff = 2.5 # sounds longer than this go to medium sensors
     nbr_margin = 1
 
@@ -45,7 +46,7 @@ class Fantasmophone:
     #switch_rate = 0.1 # also equal to 1/expected number of switches per minute
     
 
-    reg_update_per_minute = 10 # Expected number of non-rotation updates per minute
+    reg_update_per_minute = 1 # Expected number of non-rotation updates per minute
     #update_rate = 1.0/reg_update_per_minute
     # For running later, set reg_update_per_minute to something like 0.1, one update every six minutes
     rotation_per_minute = 0
@@ -200,7 +201,7 @@ class Fantasmophone:
         channels = self.sound_table.loc[sounds, "channel"].to_list()
         loop = self.sound_table.loc[sounds, "loop"].to_list()
         gain = self.sound_table.loc[sounds, "gain"].to_list()
-        out = f'V{"-".join([f"{int(s)},{int(c)},{r*1},{int(g)}" for s, c, r, g in zip(sounds, channels, loop, gain)])}'
+        out = f'V{"-".join([f"{int(s)},{int(c)-1},{r*1},{int(g)}" for s, c, r, g in zip(sounds, channels, loop, gain)])}'
         print(f'writing sound values:\n{out}')
         if self.serial is not None:
             self.serial.write(out.encode('utf-8'))
@@ -224,6 +225,7 @@ class Fantasmophone:
     def read_sound_table(self):
         self.sound_table =  pd.read_csv(self.sound_table_file)
         self.num_sounds = self.sound_table.shape[0]
+        self.sound_table.channel = random.choices([1, 2, 3, 4, 6], k = self.sound_table.shape[0])
         # Does not do any format checking, get format right
         # Need cols loop, led_color, led_decay, led_period, sound_id, channel, gain, length_seconds, position
         self.sound_table["assigned"] = False
@@ -478,7 +480,7 @@ class Fantasmophone:
 
 def setup(): 
     print('Time to set up!')
-    fan.initialize(enable_serial=False) 
+    fan.initialize(enable_serial=True) 
     fan.read_sound_table()
     fan.read_sensor_info()
     fan.assign_sounds_initial()

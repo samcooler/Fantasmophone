@@ -34,7 +34,7 @@ const int LED_ORIENTATION = 1; // -1 to reverse
 const int numSpots = NUM_BUTTONS;
 const int spotHalfWidth = 8;
 const float boundary = 0.01;
-const float luminanceMult = 20;
+const float luminanceMult = 80;
 
 
 #define DATAPIN    A4
@@ -153,11 +153,15 @@ int colors[6] = {0, 60, 100, 240, 300, 340};
 //float offsetBySpot[12] = {0, 1, 0, 1, 1, 0, -2, -3, -2, -2, -3, -1};
 //float offsetBySpot[numSpots] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 //                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-float offsetBySpot[numSpots] = {0.00, 0.02, 0.04, 0.06, 0.08, 0.10, 0.12, 0.15, 0.17, 0.19, 0.21, 0.23, 0.25, 0.27,
-                                0.29, 0.31, 0.33, 0.35, 0.38, 0.40, 0.42, 0.44, 0.46, 0.48, 0.50, 0.52, 0.54, 0.56,
-                                0.58, 0.60, 0.62, 0.65, 0.67, 0.69, 0.71, 0.73, 0.75, 0.77, 0.79, 0.81, 0.83, 0.85,
-                                0.88, 0.90, 0.92, 0.94, 0.96, 0.98};
+//float offsetBySpot[numSpots] = {0.00, 0.02, 0.04, 0.06, 0.08, 0.10, 0.12, 0.15, 0.17, 0.19, 0.21, 0.23, 0.25, 0.27,
+//                                0.29, 0.31, 0.33, 0.35, 0.38, 0.40, 0.42, 0.44, 0.46, 0.48, 0.50, 0.52, 0.54, 0.56,
+//                                0.58, 0.60, 0.62, 0.65, 0.67, 0.69, 0.71, 0.73, 0.75, 0.77, 0.79, 0.81, 0.83, 0.85,
+//                                0.88, 0.90, 0.92, 0.94, 0.96, 0.98};
 
+float offsetBySpot[numSpots] = {0.74, 0.72, 0.70, 0.66, 0.64, 0.59, 0.55, 0.68, 0.61, 0.51, 0.52, 0.57, 0.43, 0.49,
+                                0.47, 0.45, 0.41, 0.38, 0.36, 0.34, 0.32, 0.30, 0.28, 0.26, 0.99, 0.95, 0.93, 0.91,
+                                0.89, 0.86, 0.84, 0.82, 0.80, 0.78, 0.76, 0.22, 0.24, 0.20, 0.18, 0.16, 0.14, 0.11,
+                                0.09, 0.07, 0.05, 0.03, 0.01};
 void setup() {
     Serial.begin(1000000);
 
@@ -349,17 +353,17 @@ void loop() {
             }
             if (buf_rx[1] == 'S') {
                 Serial.println("Message type: sensor read w/ playing status");
-                uint8_t bi = 0;
-                uint8_t now_playing_byte = 0;
+                 uint8_t bi = 0;
+                 uint8_t now_playing_byte = 0;
 
-                bool now_playing = 0;
-                for (uint8_t byt = 0; byt < 6; byt++) {
+                 bool now_playing = 0;
+                 for (uint8_t byt = 0; byt < 6; byt++) {
                     for (uint8_t bit = 0; bit < 8; bit++) {
-                        bi = byt * 8 + bit;
-                        now_playing = buf_rx[byt + 2] & (1 << bit);
+                         bi = byt * 8 + bit;
+                         now_playing = buf_rx[byt + 2] & (1 << bit);
 
-                        // if spot was in repeat mode, but now is not playing, let it decay from here
-                        if (!now_playing & spots[bi].repeat_mode) {
+                         // if spot was in repeat mode, but now is not playing, let it decay from here
+                         if (!now_playing & spots[bi].repeat_mode) {
                             spots[bi].t_start = t;
                             printLine("turning off repeat sound on ", bi);
                         }
@@ -367,7 +371,7 @@ void loop() {
                         spots[bi].repeat_mode = now_playing;
                     }
                     buf_tx[byt + 2] = now_playing_byte;
-                }
+                 }
             }
 
             // process touch sensors for reply
